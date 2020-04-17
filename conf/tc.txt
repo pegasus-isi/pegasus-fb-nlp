@@ -1,0 +1,23 @@
+# This is the transformation catalog. It lists information about each of the
+# executables that are used by the workflow.
+
+tr test {
+    site local {
+        pfn "file:///test.py"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+        container "container_name"
+    }
+}
+
+cont umich {
+    # can be either docker or singularity
+    type "docker"
+
+    # URL to image in a docker|singularity hub OR
+    image "docker:///lpottier/todo:latest"
+
+    #image_site "pegasus"
+}
+

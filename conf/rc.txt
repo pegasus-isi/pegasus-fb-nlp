@@ -1,0 +1,2 @@
+# file-based replica catalog
+test.a file:///nfs/v5/lpottier/ml-workflows/nlp/pegasus-fb-nlp/test.a site="local"
