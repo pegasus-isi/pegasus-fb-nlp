@@ -8,16 +8,20 @@
 
 set -e
 
-# concatenate monolingual data files
+# concatenate monolingual data files for one language
 
-FILES="$1"
-N_MONO="$2"
-SRC_RAW="$3"
+while getopts 'm:o:' opt; do
+	case $opt in
+		m) N_MONO=$OPTARG ;;
+		o) SRC_RAW=$OPTARG ;;
+	esac
+done
+shift $(( OPTIND - 1 ))
 
-echo "Concatenating monolingual data for..."
+FILES="$@"
 
-cat $(ls $FILES | grep -v gz) | head -n $N_MONO > $SRC_RAW
-
+echo "Concatenating monolingual data for: $@"
+cat $FILES | head -n $N_MONO > $SRC_RAW
 echo "monolingual data concatenated in: $SRC_RAW"
 
 # check number of lines
@@ -25,4 +29,3 @@ if ! [[ "$(wc -l < $SRC_RAW)" -eq "$N_MONO" ]]; then
 	echo "ERROR: Number of lines doesn't match! Be sure you have $N_MONO sentences in your EN monolingual data." 
 	exit -1
 fi
-

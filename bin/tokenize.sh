@@ -11,14 +11,18 @@ set -e
 TOKENIZER=tokenizer.perl
 NORM_PUNC=normalize-punctuation.perl
 
-CONCAT_DATA="$1"
-LANG="$2" # en, fr, de etc
-N_THREADS="$3"
-OUTPUT="$4"
+while getopts 'i:l:p:o:' opt; do
+    case $opt in
+        i) INPUT=$OPTARG ;;
+        l) LANG=$OPTARG ;;
+        p) THREADS=$OPTARG ;;
+        o) OUTPUT=$OPTARG ;;
+    esac
+done
 
 # tokenize data
 echo "Tokenize monolingual data for $LANG..."
 
-cat "$CONCAT_DATA" | $NORM_PUNC -l $LANG | $TOKENIZER -l $LANG -no-escape -threads $N_THREADS > $OUTPUT
+cat $INPUT | $NORM_PUNC -l $LANG | $TOKENIZER -l $LANG -no-escape -threads $THREADS > $OUTPUT
 
 echo "$LANG monolingual data tokenized in: $OUTPUT"

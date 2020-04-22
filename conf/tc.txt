@@ -19,14 +19,31 @@ tr unzip {
     }
 }
 
-
-cont moses {
-    # can be either docker or singularity
-    type "docker"
-
-    # URL to image in a docker|singularity hub OR
-    image "docker:///lpottier/moses:latest"
-
-    #image_site "pegasus"
+tr concat {
+    site condorpool {
+        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/concatenate.sh"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+    }
 }
+
+tr tokenize {
+    site condorpool {
+        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/tokenize.sh"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+    }
+}
+
+#cont moses {
+#    # can be either docker or singularity
+#    type "docker"
+#
+#    # URL to image in a docker|singularity hub OR
+#    image "docker:///lpottier/moses:latest"
+#
+#    #image_site "pegasus"
+#}
 

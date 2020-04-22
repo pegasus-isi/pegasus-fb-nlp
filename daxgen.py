@@ -17,13 +17,13 @@ PARA_PATH	=	DATA_PATH + "para"
 
 # If we need to fetch data from server
 LANGS		= 	['en', 'fr']
-YEARS		= 	[2007]
+YEARS		= 	[2007,2008]
 BASE_URL	=	"http://www.statmt.org/wmt14/training-monolingual-news-crawl/"
 
 # Pre-training parameters
 N_MONO		=	10000000  		# number of monolingual sentences for each language
 CODES 		=	60000      		# number of BPE codes
-N_THREADS 	=	48     			# number of threads in data preprocessing
+N_THREADS 	=	4     			# number of threads in data preprocessing
 N_EPOCHS	=	10      		# number of fastText epochs
 
 
@@ -134,11 +134,10 @@ for lang in range(len(LANGS)):
 		if input_unziped[:-3] not in files_already_there:
 			# gunzip
 			unzip[lang].append(Job("gzip"))
-			LOGGER.info("{} will be unzipped..".format(input_unziped))
-			unzip[lang][year].uses(current_input, link=Link.INPUT)
+			unzip[lang][year].uses(input_unziped, link=Link.INPUT)
 			unzip[lang][year].uses(dataset[lang][year], link=Link.OUTPUT, transfer=False, register=False)
 			dag.addJob(unzip[lang][year])
-			unzip[lang][year].addArguments(current_input)
+			unzip[lang][year].addArguments(input_unziped)
 			# Add dependency only of we download the datasets
 			if input_unziped not in files_already_there:
 				dag.addDependency(Dependency(parent=wget[lang][year], child=unzip[lang][year]))
@@ -150,38 +149,33 @@ for lang in range(len(LANGS)):
 	## Concatenate -> SRC_RAW=$MONO_PATH/all.lang1
 
 	concat.append(Job("concat"))
-	concat[lang].addArguments("file output by all gzip for one language", "N_MONO", "output: $MONO_PATH/all.en")
-	lang_raw = File("all.{1}".format(LANGS[lang]))
-	concat[lang].uses(all_datasets, link=Link.INPUT)
+	lang_raw = File("all.{0}".format(LANGS[lang]))
+	concat[lang].addArguments("-m", str(N_MONO), "-o", lang_raw.name, " ".join([x.name for x in dataset[lang]]))
 	concat[lang].uses(lang_raw, link=Link.OUTPUT, transfer=True, register=True)
-	dag.addJob(concat1)
-	for year in range(len(YEARS)): 
+	dag.addJob(concat[lang])
+
+	for year in range(len(YEARS)):
+		concat[lang].uses(dataset[lang][year], link=Link.INPUT)
 		dag.addDependency(Dependency(parent=unzip[lang][year], child=concat[lang]))
 
-# 	## Tokenize -> SRC_TOK=$MONO_PATH/all.en.tok
-# 	tokenize1 = Job("tokenize")
-# 	tokenize1.addArguments("file output by all gzip for one language", "N_MONO", "output: $MONO_PATH/all.en")
-# 	tokenize1.uses(listing, link=Link.OUTPUT, transfer=True, register=True)
-# 	dag.addJob(tokenize1)
-# 	dag.addDependency(Dependency(parent=concat1, child=tokenize))
 
-# 	## Tokenize -> SRC_TOK=$MONO_PATH/all.en.tok
-# 	tokenize2 = Job("tokenize")
-# 	tokenize2.addArguments("file output by all gzip for one language", "N_MONO", "output: $MONO_PATH/all.en")
-# 	src_tok = File("{0}/all.{1}.tok".format(MONO_PATH,LANG))
-# 	tokenize2.uses(src_tok, link=Link.OUTPUT, transfer=True, register=True)
-# 	dag.addJob(tokenize1)
-# 	dag.addDependency(Dependency(parent=concat1, child=tokenize))
+	## Tokenize -> SRC_TOK=$MONO_PATH/all.en.tok
+	tokenize.append(Job("tokenize"))
+	src_tok = File("{0}.tok".format(lang_raw.name))
+	tokenize[lang].addArguments("-i", lang_raw.name, "-l", LANGS[lang], "-p", N_THREADS, "-o", src_tok.name)
+	tokenize[lang].uses(src_tok, link=Link.OUTPUT, transfer=True, register=True)
+	dag.addJob(tokenize[lang])
+	dag.addDependency(Dependency(parent=concat[lang], child=tokenize[lang]))
 
 
-# ## fastBPE -> $FASTBPE learnbpe $CODES $SRC_TOK $TGT_TOK > $BPE_CODES
-# fast_bpe = Job("fastbpe")
-# fast_bpe.addArguments("learnbpe", CODES, )
-# fast_bpe.uses(listing, link=Link.OUTPUT, transfer=True, register=True)
-# dag.addJob(fast_bpe)
+## fastBPE -> $FASTBPE learnbpe $CODES $SRC_TOK $TGT_TOK > $BPE_CODES
+fast_bpe = Job("fastbpe")
+fast_bpe.addArguments("learnbpe", CODES, )
+fast_bpe.uses(listing, link=Link.OUTPUT, transfer=True, register=True)
+dag.addJob(fast_bpe)
 
-# for lang in LANGS:
-# 	dag.addDependency(Dependency(parent=concat[lang], child=fast_bpe))
+for lang in LANGS:
+	dag.addDependency(Dependency(parent=concat[lang], child=fast_bpe))
 
 
 
