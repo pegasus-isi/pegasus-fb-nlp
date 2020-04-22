@@ -1,22 +1,31 @@
 # This is the transformation catalog. It lists information about each of the
 # executables that are used by the workflow.
 
-tr test {
-    site local {
-        pfn "file:///test.py"
+tr wget {
+    site condorpool {
+        pfn "/bin/wget"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
-        container "container_name"
     }
 }
 
-cont umich {
+tr unzip {
+    site condorpool {
+        pfn "/bin/gunzip"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+    }
+}
+
+
+cont moses {
     # can be either docker or singularity
     type "docker"
 
     # URL to image in a docker|singularity hub OR
-    image "docker:///lpottier/todo:latest"
+    image "docker:///lpottier/moses:latest"
 
     #image_site "pegasus"
 }
