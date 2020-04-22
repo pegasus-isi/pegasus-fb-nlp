@@ -4,6 +4,9 @@ import pwd
 import sys
 import time
 import glob
+import argparse
+import logging
+from logging import Logger
 from Pegasus.DAX3 import *
 
 ##################### BEGIN PARAMETER #####################
@@ -63,6 +66,25 @@ N_EPOCHS	=	10      		# number of fastText epochs
 
 ###################### END PARAMETER ######################
 
+LOGGER = logging.getLogger(__name__)
+
+"""
+Logger configuration
+"""
+
+def configure_logger(logger):
+	logger.setLevel(logging.INFO)
+
+	ch = logging.StreamHandler()
+	ch.setLevel(logging.INFO)
+	formatter = logging.Formatter(
+		'[%(asctime)s] %(levelname)-8s %(message)s',
+		datefmt='%Y-%m-%d %H:%M:%S',
+	)
+	ch.setFormatter(formatter)
+	logger.addHandler(ch)
+
+
 # The name of the DAX file is the first argument
 if len(sys.argv) != 2:
 	sys.stderr.write("Usage: %s DAXFILE\n" % (sys.argv[0]))
@@ -71,8 +93,10 @@ daxfile = sys.argv[1]
 
 USER = pwd.getpwuid(os.getuid())[0]
 
+configure_logger(LOGGER)
+
 # Create a abstract dag
-print("Creating ADAG...")
+LOGGER.info("Creating ADAG...")
 dag = ADAG("fb-nlp-nmt")
 
 # Add some workflow-level metadata
@@ -85,51 +109,54 @@ dataset = []
 concat = []
 tokenize = []
 
+files_already_there = [os.path.basename(x) for x in glob.glob(MONO_PATH+"/*")]
+
 for lang in range(len(LANGS)):
 	wget.append([])
 	unzip.append([])
 	dataset.append([])
 
 	for year in range(len(YEARS)):
-		current_input = File("{0}/news.{1}.{2}.shuffled.gz".format(BASE_URL, year, lang))
+		current_input = File("{0}/news.{1}.{2}.shuffled.gz".format(BASE_URL, YEARS[year], LANGS[lang]))
 		input_unziped = current_input.name.split('/')[-1]
-
 		#If the data set is already there
-		if input_unziped not in glob.glob(MONO_PATH+"/*"):
+		if input_unziped not in files_already_there:
+			LOGGER.info("{} will be downloaded..".format(input_unziped))
 			wget[lang].append(Job("wget"))
 			wget[lang][year].addArguments("-c", current_input)
 			wget[lang][year].uses(current_input, link=Link.INPUT)
 			dag.addJob(wget[lang][year])
+		else:
+			LOGGER.info("{} found in {}".format(input_unziped, MONO_PATH))
 
 		dataset[lang].append(File(input_unziped[:-3]))
 		# if the data set is already unzipped
-		if input_unziped[:-3] not in glob.glob(MONO_PATH+"/*"):
+		if input_unziped[:-3] not in files_already_there:
 			# gunzip
 			unzip[lang].append(Job("gzip"))
+			LOGGER.info("{} will be unzipped..".format(input_unziped))
 			unzip[lang][year].uses(current_input, link=Link.INPUT)
 			unzip[lang][year].uses(dataset[lang][year], link=Link.OUTPUT, transfer=False, register=False)
 			dag.addJob(unzip[lang][year])
 			unzip[lang][year].addArguments(current_input)
-			dag.addDependency(Dependency(parent=wget[lang][year], child=unzip[lang][year]))
-
+			# Add dependency only of we download the datasets
+			if input_unziped not in files_already_there:
+				dag.addDependency(Dependency(parent=wget[lang][year], child=unzip[lang][year]))
+		else:
+			LOGGER.info("{} already unzipped in {}".format(input_unziped, MONO_PATH))
 
 	#####
 
-# 	## Concatenate -> SRC_RAW=$MONO_PATH/all.lang1
+	## Concatenate -> SRC_RAW=$MONO_PATH/all.lang1
 
-# 	concat1 = Job("concat_lang1")
-# 	concat1.addArguments("file output by all gzip for one language", "N_MONO", "output: $MONO_PATH/all.en")
-# 	concat1.uses(listing, link=Link.OUTPUT, transfer=True, register=True)
-# 	dag.addJob(concat1)
-# 	dag.addDependency(Dependency(parent=unzip, child=concat1))
-
-# 	concat2 = Job("concat_lang2")
-# 	concat2.addArguments("file output by all gzip for one language", "N_MONO", "output: $MONO_PATH/all.en")
-# 	lang2_raw = File("{0}/all.{1}".format(MONO_PATH,LANG))
-# 	concat2.uses(lang2_raw, link=Link.OUTPUT, transfer=True, register=True)
-# 	dag.addJob(concat2)
-# 	dag.addDependency(Dependency(parent=unzip, child=concat2))
-
+	concat.append(Job("concat"))
+	concat[lang].addArguments("file output by all gzip for one language", "N_MONO", "output: $MONO_PATH/all.en")
+	lang_raw = File("all.{1}".format(LANGS[lang]))
+	concat[lang].uses(all_datasets, link=Link.INPUT)
+	concat[lang].uses(lang_raw, link=Link.OUTPUT, transfer=True, register=True)
+	dag.addJob(concat1)
+	for year in range(len(YEARS)): 
+		dag.addDependency(Dependency(parent=unzip[lang][year], child=concat[lang]))
 
 # 	## Tokenize -> SRC_TOK=$MONO_PATH/all.en.tok
 # 	tokenize1 = Job("tokenize")
@@ -158,31 +185,33 @@ for lang in range(len(LANGS)):
 
 
 
-parser = ArgumentParser(description="fb-nlp-workflow")
-parser.add_argument("-i", "--input", type=str, nargs="+", help="Input files (if none, datasets will be downloaded)", required=False)
-parser.add_argument("-y", "--years", type=str, nargs="+", help="Years to consider", required=True)
-parser.add_argument("-l", "--langs", type=str, nargs="+", help="Langs to consider (two maximum)", required=True)
-parser.add_argument("-o", "--outdir", type=str, help="Where to output files", required=True)
+# parser = argparse.ArgumentParser(description="fb-nlp-nmt")
+# parser.add_argument("-i", "--input", type=str, nargs="+", help="Input files (if none, datasets will be downloaded)", required=False)
+# parser.add_argument("-y", "--years", type=str, nargs="+", help="Years to consider", required=True)
+# parser.add_argument("-l", "--langs", type=str, nargs="+", help="Langs to consider (two maximum)", required=True)
+# parser.add_argument("-o", "--outdir", type=str, help="Where to output files", required=True)
 
-parser.add_argument("-t", "--threads", type=int, default=4, help="Number of threads for the training", required=True)
-parser.add_argument("-e", "--epochs", type=int, default=10, help="Number of epochs for the training", required=True)
-parser.add_argument("-m", "--mono", default=10000000, type=int, help="Number of monolingual sentences for each language", required=True)
-parser.add_argument("-b", "--bpe", default=60000, type=int, help="Number of BPE codes", required=True)
+# parser.add_argument("-t", "--threads", type=int, default=4, help="Number of threads for the training", required=True)
+# parser.add_argument("-e", "--epochs", type=int, default=10, help="Number of epochs for the training", required=True)
+# parser.add_argument("-m", "--mono", default=10000000, type=int, help="Number of monolingual sentences for each language", required=True)
+# parser.add_argument("-b", "--bpe", default=60000, type=int, help="Number of BPE codes", required=True)
 
-args = parser.parse_args()
-outdir = os.path.abspath(args.indir)
-outdir = os.path.abspath(args.outdir)
+# args = parser.parse_args()
+# outdir = os.path.abspath(args.indir)
+# outdir = os.path.abspath(args.outdir)
 
-if not os.path.isdir(args.indir):
-	os.makedirs(indir)
-	os.makedirs(indir + "/mono")
+# if not os.path.isdir(args.indir):
+# 	os.makedirs(indir)
+# 	os.makedirs(indir + "/mono")
 
-if not os.path.isdir(args.outdir):
-	os.makedirs(outdir)
+# if not os.path.isdir(args.outdir):
+# 	os.makedirs(outdir)
 
 # Write the DAX to stdout
-print("Writing %s" % daxfile)
-f = open(daxfile, "w")
-dag.writeXML(f)
-f.close()
+LOGGER.info("Writing {}".format(daxfile))
+
+with open(daxfile, "w") as f:
+	dag.writeXML(f)
+
+LOGGER.info("Done")
 
