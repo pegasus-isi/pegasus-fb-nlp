@@ -16,15 +16,15 @@ MONO_PATH	=	DATA_PATH + "mono"
 PARA_PATH	=	DATA_PATH + "para"
 
 # If we need to fetch data from server
-LANGS		= 	['en', 'fr']
-YEARS		= 	[2007,2008]
+LANGS		=	['en', 'fr']
+YEARS		=	[2007,2008]
 BASE_URL	=	"http://www.statmt.org/wmt14/training-monolingual-news-crawl/"
 
 # Pre-training parameters
-N_MONO		=	10000000  		# number of monolingual sentences for each language
-CODES 		=	60000      		# number of BPE codes
-N_THREADS 	=	4     			# number of threads in data preprocessing
-N_EPOCHS	=	10      		# number of fastText epochs
+N_MONO		=	10000000		# number of monolingual sentences for each language
+CODES 		=	60000			# number of BPE codes
+N_THREADS 	=	4				# number of threads in data preprocessing
+N_EPOCHS	=	10				# number of fastText epochs
 
 
 # # main paths
@@ -108,6 +108,8 @@ unzip = []
 dataset = []
 concat = []
 tokenize = []
+src_tok = []
+lang_tok = []
 
 files_already_there = [os.path.basename(x) for x in glob.glob(MONO_PATH+"/*")]
 
@@ -119,38 +121,42 @@ for lang in range(len(LANGS)):
 	for year in range(len(YEARS)):
 		current_input = File("{0}/news.{1}.{2}.shuffled.gz".format(BASE_URL, YEARS[year], LANGS[lang]))
 		input_unziped = current_input.name.split('/')[-1]
+
 		#If the data set is already there
 		if input_unziped not in files_already_there:
 			LOGGER.info("{} will be downloaded..".format(input_unziped))
 			wget[lang].append(Job("wget"))
 			wget[lang][year].addArguments("-c", current_input)
-			wget[lang][year].uses(current_input, link=Link.INPUT)
+			wget[lang][year].uses(current_input, link=Link.OUTPUT, transfer=False, register=False)
 			dag.addJob(wget[lang][year])
 		else:
-			LOGGER.info("{} found in {}".format(input_unziped, MONO_PATH))
+			LOGGER.info("{0} found in {1}".format(input_unziped, MONO_PATH))
 
 		dataset[lang].append(File(input_unziped[:-3]))
+
 		# if the data set is already unzipped
 		if input_unziped[:-3] not in files_already_there:
 			# gunzip
 			unzip[lang].append(Job("gzip"))
+
 			unzip[lang][year].uses(input_unziped, link=Link.INPUT)
 			unzip[lang][year].uses(dataset[lang][year], link=Link.OUTPUT, transfer=False, register=False)
+			
 			dag.addJob(unzip[lang][year])
 			unzip[lang][year].addArguments(input_unziped)
+
 			# Add dependency only of we download the datasets
 			if input_unziped not in files_already_there:
 				dag.addDependency(Dependency(parent=wget[lang][year], child=unzip[lang][year]))
 		else:
-			LOGGER.info("{} already unzipped in {}".format(input_unziped, MONO_PATH))
+			LOGGER.info("{0} already unzipped in {1}".format(input_unziped, MONO_PATH))
 
-	#####
-
-	## Concatenate -> SRC_RAW=$MONO_PATH/all.lang1
+	## Concatenate data for each language
 
 	concat.append(Job("concat"))
 	lang_raw = File("all.{0}".format(LANGS[lang]))
 	concat[lang].addArguments("-m", str(N_MONO), "-o", lang_raw.name, " ".join([x.name for x in dataset[lang]]))
+	
 	concat[lang].uses(lang_raw, link=Link.OUTPUT, transfer=True, register=True)
 	dag.addJob(concat[lang])
 
@@ -158,25 +164,172 @@ for lang in range(len(LANGS)):
 		concat[lang].uses(dataset[lang][year], link=Link.INPUT)
 		dag.addDependency(Dependency(parent=unzip[lang][year], child=concat[lang]))
 
+	LOGGER.info("{0} monolingual data concatenated in: {1}".format(LANGS[lang], lang_raw.name))
 
-	## Tokenize -> SRC_TOK=$MONO_PATH/all.en.tok
+	## Tokenize each language
 	tokenize.append(Job("tokenize"))
-	src_tok = File("{0}.tok".format(lang_raw.name))
-	tokenize[lang].addArguments("-i", lang_raw.name, "-l", LANGS[lang], "-p", N_THREADS, "-o", src_tok.name)
-	tokenize[lang].uses(src_tok, link=Link.OUTPUT, transfer=True, register=True)
+	lang_tok.append(File("{0}.tok".format(lang_raw.name)))
+	tokenize[lang].addArguments("-i", lang_raw.name, "-l", LANGS[lang], "-p", str(N_THREADS), "-o", lang_tok[lang].name)
+	
+	tokenize[lang].uses(lang_raw, link=Link.INPUT)
+	tokenize[lang].uses(lang_tok[lang], link=Link.OUTPUT, transfer=True, register=True)
+	
 	dag.addJob(tokenize[lang])
 	dag.addDependency(Dependency(parent=concat[lang], child=tokenize[lang]))
 
+	LOGGER.info("{0} monolingual data tokenized in: {1}".format(LANGS[lang], lang_tok[lang].name))
 
-## fastBPE -> $FASTBPE learnbpe $CODES $SRC_TOK $TGT_TOK > $BPE_CODES
+## learn BPE codes
 fast_bpe = Job("fastbpe")
-fast_bpe.addArguments("learnbpe", CODES, )
-fast_bpe.uses(listing, link=Link.OUTPUT, transfer=True, register=True)
-dag.addJob(fast_bpe)
+fast_bpe.addArguments("learnbpe", str(CODES), " ".join([x.name for x in lang_tok]))
+bpe_codes = File("bpe_codes")
+fast_bpe.setStdout(bpe_codes)
 
-for lang in LANGS:
+for lang in range(len(LANGS)):
+	fast_bpe.uses(lang_tok[lang], link=Link.INPUT)
+fast_bpe.uses(bpe_codes, link=Link.OUTPUT, transfer=True, register=True)
+
+dag.addJob(fast_bpe)
+LOGGER.info("Learning BPE codes")
+
+apply_bpe = []
+tok_codes = []
+
+extract_vocab = []
+lang_vocab = []
+
+for lang in range(len(LANGS)):
 	dag.addDependency(Dependency(parent=concat[lang], child=fast_bpe))
 
+	## Apply BPE codes
+	apply_bpe.append(Job("fastbpe"))
+	apply_bpe[lang].addArguments("applybpe", str(CODES), " ".join([x.name for x in src_tok]))
+	
+	tok_codes.append(File("{0}.{1}".format(lang_tok[lang].name, str(CODES))))
+	apply_bpe[lang].uses(bpe_codes, link=Link.INPUT)
+	apply_bpe[lang].uses(lang_tok[lang], link=Link.INPUT)
+	apply_bpe[lang].uses(tok_codes[lang], link=Link.OUTPUT, transfer=True, register=True)
+	
+	dag.addJob(apply_bpe[lang])
+	dag.addDependency(Dependency(parent=fast_bpe, child=apply_bpe[lang]))
+
+	LOGGER.info("BPE codes applied to {0} in: {1}".format(LANGS[lang], tok_codes[lang].name))
+
+	## Extract vocabulary for each language
+	extract_vocab.append(Job("fastbpe"))
+	extract_vocab[lang].addArguments("getvocab", tok_codes[lang].name)
+	lang_vocab.append(File("vocab.{0}.{1}".format(LANGS[lang], str(CODES))))
+
+	extract_vocab[lang].uses(tok_codes[lang], link=Link.INPUT)
+	extract_vocab[lang].uses(lang_vocab[lang], link=Link.OUTPUT, transfer=True, register=True)
+	extract_vocab[lang].setStdout(lang_vocab[lang])
+
+	dag.addJob(extract_vocab[lang])
+	dag.addDependency(Dependency(parent=apply_bpe[lang], child=extract_vocab[lang]))
+
+	LOGGER.info("{0} vocab in: {1}".format(LANGS[lang], lang_vocab[lang].name))
+
+
+## Extract vocabulary for all languages
+extract_vocab_all = Job("fastbpe")
+extract_vocab_all.addArguments("getvocab", " ".join([x.name for x in tok_codes]))
+lang_vocab_all = File("vocab.{0}.{1}".format("-".join([x for x in LANGS]), str(CODES)))
+dag.addJob(extract_vocab_all)
+extract_vocab_all.setStdout(lang_vocab_all)
+
+for lang in range(len(LANGS)):
+	extract_vocab_all.uses(tok_codes[lang], link=Link.INPUT)
+	dag.addDependency(Dependency(parent=apply_bpe[lang], child=extract_vocab_all))
+
+extract_vocab_all.uses(lang_vocab_all, link=Link.OUTPUT, transfer=True, register=True)
+
+LOGGER.info("Full vocab in: {0}".format(lang_vocab_all.name))
+
+
+## Binarize data
+binarize = []
+lang_binarized = []
+
+for lang in range(len(LANGS)):
+	binarize.append(Job("binarize"))
+	binarize[lang].addArguments(lang_vocab_all.name, tok_codes[lang].name)
+	dag.addJob(binarize[lang])
+
+	lang_binarized.append(File("{0}.pth".format(tok_codes[lang].name)))
+
+	binarize[lang].uses(lang_vocab_all, link=Link.INPUT)
+	binarize[lang].uses(tok_codes[lang], link=Link.INPUT)
+
+	binarize[lang].uses(lang_binarized[lang], link=Link.OUTPUT, transfer=True, register=True)
+	binarize[lang].setStdout(lang_binarized[lang])
+
+	dag.addDependency(Dependency(parent=extract_vocab_all, child=binarize[lang]))
+
+
+	LOGGER.info("{0} binarized data in: {1}".format(LANGS[lang], lang_binarized[lang].name))
+
+
+### TODO para test
+# echo ""
+# echo "===== Data summary"
+# echo "Monolingual training data:"
+# echo "    EN: $SRC_TOK.$CODES.pth"
+# echo "    FR: $TGT_TOK.$CODES.pth"
+# echo "Parallel validation data:"
+# echo "    EN: $SRC_VALID.$CODES.pth"
+# echo "    FR: $TGT_VALID.$CODES.pth"
+# echo "Parallel test data:"
+# echo "    EN: $SRC_TEST.$CODES.pth"
+# echo "    FR: $TGT_TEST.$CODES.pth"
+# echo ""
+### END TODO
+
+
+###########################################################################
+################ Train fastText on concatenated embeddings ################
+###########################################################################
+
+## Concatenating source and target monolingual data
+concat_bpe = Job("concat-bpe")
+lang_bpe_all = File("all.{0}.{1}".format("-".join([x for x in LANGS]), str(CODES)))
+concat_bpe.addArguments("-o", lang_bpe_all.name, " ".join([x.name for x in tok_codes]))
+
+concat_bpe.uses(lang_bpe_all, link=Link.OUTPUT, transfer=True, register=True)
+dag.addJob(concat_bpe)
+
+for lang in range(len(LANGS)):
+	concat_bpe.uses(tok_codes[lang], link=Link.INPUT)
+	dag.addDependency(Dependency(parent=apply_bpe[lang], child=concat_bpe))
+
+LOGGER.info("Concatenated shuffled data in: {0}".format(lang_bpe_all.name))
+
+## Actual training with fastText
+
+LOGGER.info("Training fastText on: {0}".format(lang_bpe_all.name))
+
+fasttext = Job("fasttext")
+bpe_vec = File("{0}.vec".format(lang_bpe_all.name))
+fasttext.addArguments(
+	"skipgram", "-epoch", str(N_EPOCHS), 
+	"-minCount", "0", "-dim", "512", "-thread", 
+	str(N_THREADS), "-ws", "5", "-neg", "10", 
+	"-input", lang_bpe_all.name, 
+	"-output", lang_bpe_all.name
+)
+
+fasttext.uses(lang_bpe_all, link=Link.INPUT)
+fasttext.uses(bpe_vec, link=Link.OUTPUT, transfer=True, register=True)
+dag.addJob(fasttext)
+
+LOGGER.info("Cross-lingual embeddings in: {0}".format(bpe_vec.name))
+
+
+##################### BEGIN EXECUTABLE #####################
+
+### Executable and transformation for tokenize
+# toto = Executable(name="toto")
+
+##################### END EXECUTABLE #####################
 
 
 # parser = argparse.ArgumentParser(description="fb-nlp-nmt")

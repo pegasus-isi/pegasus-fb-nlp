@@ -28,9 +28,45 @@ tr concat {
     }
 }
 
+tr concat-bpe {
+    site condorpool {
+        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/concat-bpe.sh"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+    }
+}
+
 tr tokenize {
     site condorpool {
         pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/tokenize.sh"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+    }
+}
+
+tr fastbpe {
+    site condorpool {
+        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/fastBPE/fast"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+    }
+}
+
+tr binarize {
+    site condorpool {
+        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/preprocess.py"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+    }
+}
+
+tr fasttext {
+    site condorpool {
+        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/fastText/fasttext"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"

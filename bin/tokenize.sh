@@ -8,8 +8,8 @@
 
 set -e
 
-TOKENIZER=tokenizer.perl
-NORM_PUNC=normalize-punctuation.perl
+TOKENIZER=bin/tokenizer/tokenizer.perl
+NORM_PUNC=bin/tokenizer/normalize-punctuation.perl
 
 while getopts 'i:l:p:o:' opt; do
     case $opt in
