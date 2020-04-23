@@ -46,7 +46,7 @@ tr tokenize {
     }
 }
 
-tr fastbpe {
+tr learnbpe {
     site condorpool {
         pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/fastBPE/fast"
         arch "x86_64"
@@ -54,6 +54,25 @@ tr fastbpe {
         type "INSTALLED"
     }
 }
+
+tr applybpe {
+    site condorpool {
+        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/fastBPE/fast"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+    }
+}
+
+tr getvocab {
+    site condorpool {
+        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/fastBPE/fast"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+    }
+}
+
 
 tr binarize {
     site condorpool {
