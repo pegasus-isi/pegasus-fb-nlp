@@ -112,6 +112,7 @@ if len(sys.argv) != 2:
 daxfile = sys.argv[1]
 
 USER = pwd.getpwuid(os.getuid())[0]
+PWD = os.path.dirname(os.path.realpath(__file__))
 
 configure_logger(LOGGER)
 
@@ -119,7 +120,7 @@ if len(LANGS) != 2:
 	LOGGER.error("exactly two languages are needed")
 
 # Create a abstract dag
-LOGGER.info("Creating ADAG...")
+LOGGER.info("Creating ADAG: {0}".format(PWD))
 dag = ADAG(DAG_ID)
 
 # Add some workflow-level metadata
@@ -179,8 +180,9 @@ for lang in range(len(LANGS)):
 	concat.append(Job("concat"))
 	lang_raw = File("all.{0}".format(LANGS[lang]))
 	concat[lang].addArguments("-m", str(N_MONO), "-o", lang_raw.name, " ".join([x.name for x in dataset[lang]]))
-	
+
 	concat[lang].uses(lang_raw, link=Link.OUTPUT, transfer=True, register=True)
+	
 	dag.addJob(concat[lang])
 
 	for year in range(len(YEARS)):
@@ -190,10 +192,28 @@ for lang in range(len(LANGS)):
 	LOGGER.info("{0} monolingual data concatenated in: {1}".format(LANGS[lang], lang_raw.name))
 
 	## Tokenize each language
-	tokenize.append(Job("tokenize"))
+
+	## Transformations
+	wrapper_tokenizer = Executable(name="tokenize")
+	wrapper_tokenizer.addPFN(PFN("file://"+PWD+"/bin/tokenizer.sh", site="local"))
+	
+	script_tokenizer = Executable(name="tokenizer")
+	script_tokenizer.addPFN(PFN("file://"+PWD+"/bin/tokenizer/tokenizer.perl", site="local"))
+	
+	normalize_punctuation = Executable(name="normalize-punctuation")
+	normalize_punctuation.addPFN(PFN("file://"+PWD+"/bin/tokenizer/normalize-punctuation.perl", site="local"))
+	
+	x_tokenizer = Transformation(wrapper_tokenizer)
+	x_tokenizer.uses(script_tokenizer)
+	x_tokenizer.uses(normalize_punctuation)
+	
+	## End transformations
+
+	tokenize.append(Job(wrapper_tokenizer))
 	lang_tok.append(File("{0}.tok".format(lang_raw.name)))
 	tokenize[lang].addArguments("-i", lang_raw.name, "-l", LANGS[lang], "-p", str(N_THREADS), "-o", lang_tok[lang].name)
-	
+
+
 	tokenize[lang].uses(lang_raw, link=Link.INPUT)
 	tokenize[lang].uses(lang_tok[lang], link=Link.OUTPUT, transfer=True, register=True)
 	
@@ -288,7 +308,6 @@ for lang in range(len(LANGS)):
 
 	dag.addDependency(Dependency(parent=extract_vocab_all, child=binarize[lang]))
 
-
 	LOGGER.info("{0} binarized data in: {1}".format(LANGS[lang], lang_binarized[lang].name))
 
 
@@ -342,101 +361,94 @@ LOGGER.info("Concatenated shuffled data in: {0}".format(lang_bpe_all.name))
 
 ## Actual training with fastText
 
-LOGGER.info("Pre-training fastText on: {0}".format(lang_bpe_all.name))
+# LOGGER.info("Pre-training fastText on: {0}".format(lang_bpe_all.name))
 
-fasttext = Job("fasttext")
-bpe_vec = File("{0}.vec".format(lang_bpe_all.name))
-fasttext.addArguments(
-	"skipgram", "-epoch", str(N_EPOCHS), 
-	"-minCount", "0", "-dim", "512", "-thread", 
-	str(N_THREADS), "-ws", "5", "-neg", "10", 
-	"-input", lang_bpe_all.name, 
-	"-output", lang_bpe_all.name
-)
+# fasttext = Job("fasttext")
+# bpe_vec = File("{0}.vec".format(lang_bpe_all.name))
+# fasttext.addArguments(
+# 	"skipgram", "-epoch", str(N_EPOCHS), 
+# 	"-minCount", "0", "-dim", "512", "-thread", 
+# 	str(N_THREADS), "-ws", "5", "-neg", "10", 
+# 	"-input", lang_bpe_all.name, 
+# 	"-output", lang_bpe_all.name
+# )
 
-fasttext.uses(lang_bpe_all, link=Link.INPUT)
-fasttext.uses(bpe_vec, link=Link.OUTPUT, transfer=True, register=True)
-dag.addJob(fasttext)
-dag.addDependency(Dependency(parent=concat_bpe, child=fasttext))
+# fasttext.uses(lang_bpe_all, link=Link.INPUT)
+# fasttext.uses(bpe_vec, link=Link.OUTPUT, transfer=True, register=True)
+# dag.addJob(fasttext)
+# dag.addDependency(Dependency(parent=concat_bpe, child=fasttext))
 
-LOGGER.info("Cross-lingual embeddings in: {0}".format(bpe_vec.name))
-
-
-###########################################################################
-################################ Training #################################
-###########################################################################
-
-MONO_DATASET = "'{0}:{1},,;{2}:{3},,'".format(LANGS[0], lang_binarized[0], LANGS[1], lang_binarized[1]) 
-# PARA_DATASET = "'en-fr:,./data/para/dev/newstest2013-ref.XX.60000.pth,./data/para/dev/newstest2014-fren-src.XX.60000.pth'", 
-
-training = Job("training")
-training_out = File("trained-{0}-{1}.out".format(LANGS[0], LANGS[1]))
-
-try:
-	training.addArguments(
-		'--exp_name', str(DAG_ID), 
-		'--transformer', str(TRANSFORMER), 
-		'--n_enc_layers', str(N_ENC_LAYERS), 
-		'--n_dec_layers', str(N_DEC_LAYERS), 
-		'--share_enc', str(SHARE_ENC), 
-		'--share_dec', str(SHARE_DEC), 
-		'--share_lang_emb', str(SHARE_LANG_EMB), 
-		'--share_output_emb', str(SHARE_OUTPUT_EMB), 
-		'--langs', str(MONO_DIRECTIONS), 
-		'--n_mono', '-1', 
-		'--mono_directions', str(MONO_DIRECTIONS),
-		'--mono_dataset', str(MONO_DATASET), 
-		# '--para_dataset', "'en-fr:,./data/para/dev/newstest2013-ref.XX.60000.pth,./data/para/dev/newstest2014-fren-src.XX.60000.pth'", 
-		'--word_shuffle', str(WORD_SHUFFLE), 
-		'--word_dropout', str(WORD_DROPOUT), 
-		'--word_blank', str(WORD_BLANK), 
-		'--pivo_directions', str(PIVO_DIRECTIONS), 
-		'--pretrained_emb', bpe_vec.name, 
-		'--pretrained_out', str(PRETRAINED_OUT), 
-		'--lambda_xe_mono', str(LAMBDA_XE_MONO), 
-		'--lambda_xe_otfd', str(LAMBDA_XE_OTFD), 
-		'--otf_num_processes', str(OTF_NUM_PROCESSES), 
-		'--otf_sync_params_every', str(OTF_SYNC_PARAMS_EVERY), 
-		'--enc_optimizer', str(ENC_OPTIMIZER), 
-		'--epoch_size', str(EPOCH_SIZE), 
-		'--stopping_criterion', str(STOPPING_CRITERION)
-	)
-
-except FormatError as e:
-	LOGGER.error("Invalid argument given to the trainer:")
-	error_lines = traceback.format_exc().splitlines()
-	for err in error_lines:
-		if "--" in err:
-			tmp=STOPPING_CRITERION
-			LOGGER.error("\t {0}".format(err))
-
-	exit(-1)
-
-dag.addJob(training)
-
-training.uses(bpe_vec.name, link=Link.INPUT)
-dag.addDependency(Dependency(parent=fasttext, child=training))
-
-for lang in range(len(LANGS)):
-	training.uses(lang_binarized[lang], link=Link.INPUT)
-	dag.addDependency(Dependency(parent=binarize[lang], child=training))
+# LOGGER.info("Cross-lingual embeddings in: {0}".format(bpe_vec.name))
 
 
-training.uses(training_out, link=Link.OUTPUT, transfer=True, register=True)
-training.setStdout(training_out)
+# ###########################################################################
+# ################################ Training #################################
+# ###########################################################################
 
-LOGGER.info("Model trained => {0}".format(training_out.name))
+# MONO_DATASET = "'{0}:{1},,;{2}:{3},,'".format(LANGS[0], lang_binarized[0], LANGS[1], lang_binarized[1]) 
+# # PARA_DATASET = "'en-fr:,./data/para/dev/newstest2013-ref.XX.60000.pth,./data/para/dev/newstest2014-fren-src.XX.60000.pth'", 
+
+# training = Job("training")
+# training_out = File("trained-{0}-{1}.out".format(LANGS[0], LANGS[1]))
+
+# try:
+# 	training.addArguments(
+# 		'--exp_name', str(DAG_ID), 
+# 		'--transformer', str(TRANSFORMER), 
+# 		'--n_enc_layers', str(N_ENC_LAYERS), 
+# 		'--n_dec_layers', str(N_DEC_LAYERS), 
+# 		'--share_enc', str(SHARE_ENC), 
+# 		'--share_dec', str(SHARE_DEC), 
+# 		'--share_lang_emb', str(SHARE_LANG_EMB), 
+# 		'--share_output_emb', str(SHARE_OUTPUT_EMB), 
+# 		'--langs', str(MONO_DIRECTIONS), 
+# 		'--n_mono', '-1', 
+# 		'--mono_directions', str(MONO_DIRECTIONS),
+# 		'--mono_dataset', str(MONO_DATASET), 
+# 		# '--para_dataset', "'en-fr:,./data/para/dev/newstest2013-ref.XX.60000.pth,./data/para/dev/newstest2014-fren-src.XX.60000.pth'", 
+# 		'--word_shuffle', str(WORD_SHUFFLE), 
+# 		'--word_dropout', str(WORD_DROPOUT), 
+# 		'--word_blank', str(WORD_BLANK), 
+# 		'--pivo_directions', str(PIVO_DIRECTIONS), 
+# 		'--pretrained_emb', bpe_vec.name, 
+# 		'--pretrained_out', str(PRETRAINED_OUT), 
+# 		'--lambda_xe_mono', str(LAMBDA_XE_MONO), 
+# 		'--lambda_xe_otfd', str(LAMBDA_XE_OTFD), 
+# 		'--otf_num_processes', str(OTF_NUM_PROCESSES), 
+# 		'--otf_sync_params_every', str(OTF_SYNC_PARAMS_EVERY), 
+# 		'--enc_optimizer', str(ENC_OPTIMIZER), 
+# 		'--epoch_size', str(EPOCH_SIZE), 
+# 		'--stopping_criterion', str(STOPPING_CRITERION)
+# 	)
+
+# except FormatError as e:
+# 	LOGGER.error("Invalid argument given to the trainer:")
+# 	error_lines = traceback.format_exc().splitlines()
+# 	for err in error_lines:
+# 		if "--" in err:
+# 			tmp=STOPPING_CRITERION
+# 			LOGGER.error("\t {0}".format(err))
+
+# 	exit(-1)
+
+# dag.addJob(training)
+
+# training.uses(bpe_vec.name, link=Link.INPUT)
+# dag.addDependency(Dependency(parent=fasttext, child=training))
+
+# for lang in range(len(LANGS)):
+# 	training.uses(lang_binarized[lang], link=Link.INPUT)
+# 	dag.addDependency(Dependency(parent=binarize[lang], child=training))
+
+
+# training.uses(training_out, link=Link.OUTPUT, transfer=True, register=True)
+# training.setStdout(training_out)
+
+# LOGGER.info("Model trained => {0}".format(training_out.name))
 
 ###########################################################################
 #############################  End Training ###############################
 ###########################################################################
-
-##################### BEGIN EXECUTABLE #####################
-
-### Executable and transformation for tokenize
-# toto = Executable(name="toto")
-
-##################### END EXECUTABLE #####################
 
 
 # parser = argparse.ArgumentParser(description="fb-nlp-nmt")

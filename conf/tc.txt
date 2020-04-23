@@ -2,7 +2,7 @@
 # executables that are used by the workflow.
 
 tr wget {
-    site condorpool {
+    site local {
         pfn "/bin/wget"
         arch "x86_64"
         os "LINUX"
@@ -11,7 +11,7 @@ tr wget {
 }
 
 tr unzip {
-    site condorpool {
+    site local {
         pfn "/bin/gunzip"
         arch "x86_64"
         os "LINUX"
@@ -20,7 +20,7 @@ tr unzip {
 }
 
 tr concat {
-    site condorpool {
+    site local {
         pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/concatenate.sh"
         arch "x86_64"
         os "LINUX"
@@ -29,7 +29,7 @@ tr concat {
 }
 
 tr concat-bpe {
-    site condorpool {
+    site local {
         pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/concat-bpe.sh"
         arch "x86_64"
         os "LINUX"
@@ -38,7 +38,7 @@ tr concat-bpe {
 }
 
 tr tokenize {
-    site condorpool {
+    site local {
         pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/tokenize.sh"
         arch "x86_64"
         os "LINUX"
@@ -47,7 +47,7 @@ tr tokenize {
 }
 
 tr learnbpe {
-    site condorpool {
+    site local {
         pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/fastBPE/fast"
         arch "x86_64"
         os "LINUX"
@@ -56,7 +56,7 @@ tr learnbpe {
 }
 
 tr applybpe {
-    site condorpool {
+    site local {
         pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/fastBPE/fast"
         arch "x86_64"
         os "LINUX"
@@ -65,7 +65,7 @@ tr applybpe {
 }
 
 tr getvocab {
-    site condorpool {
+    site local {
         pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/fastBPE/fast"
         arch "x86_64"
         os "LINUX"
@@ -75,7 +75,7 @@ tr getvocab {
 
 
 tr binarize {
-    site condorpool {
+    site local {
         pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/preprocess.py"
         arch "x86_64"
         os "LINUX"
@@ -84,7 +84,7 @@ tr binarize {
 }
 
 tr fasttext {
-    site condorpool {
+    site local {
         pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/fastText/fasttext"
         arch "x86_64"
         os "LINUX"
@@ -93,7 +93,7 @@ tr fasttext {
 }
 
 tr training {
-    site condorpool {
+    site local {
         pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/main.py"
         arch "x86_64"
         os "LINUX"
