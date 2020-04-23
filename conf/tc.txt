@@ -73,6 +73,16 @@ tr fasttext {
     }
 }
 
+tr training {
+    site condorpool {
+        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/main.py"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+    }
+}
+
+
 #cont moses {
 #    # can be either docker or singularity
 #    type "docker"

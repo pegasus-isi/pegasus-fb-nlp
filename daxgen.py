@@ -184,12 +184,14 @@ fast_bpe = Job("fastbpe")
 fast_bpe.addArguments("learnbpe", str(CODES), " ".join([x.name for x in lang_tok]))
 bpe_codes = File("bpe_codes")
 fast_bpe.setStdout(bpe_codes)
+dag.addJob(fast_bpe)
 
 for lang in range(len(LANGS)):
 	fast_bpe.uses(lang_tok[lang], link=Link.INPUT)
+	dag.addDependency(Dependency(parent=tokenize[lang], child=fast_bpe))
+
 fast_bpe.uses(bpe_codes, link=Link.OUTPUT, transfer=True, register=True)
 
-dag.addJob(fast_bpe)
 LOGGER.info("Learning BPE codes")
 
 apply_bpe = []
@@ -286,7 +288,7 @@ for lang in range(len(LANGS)):
 
 
 ###########################################################################
-################ Train fastText on concatenated embeddings ################
+################# Pre-training on concatenated embeddings #################
 ###########################################################################
 
 ## Concatenating source and target monolingual data
@@ -305,7 +307,7 @@ LOGGER.info("Concatenated shuffled data in: {0}".format(lang_bpe_all.name))
 
 ## Actual training with fastText
 
-LOGGER.info("Training fastText on: {0}".format(lang_bpe_all.name))
+LOGGER.info("Pre-training fastText on: {0}".format(lang_bpe_all.name))
 
 fasttext = Job("fasttext")
 bpe_vec = File("{0}.vec".format(lang_bpe_all.name))
@@ -320,8 +322,30 @@ fasttext.addArguments(
 fasttext.uses(lang_bpe_all, link=Link.INPUT)
 fasttext.uses(bpe_vec, link=Link.OUTPUT, transfer=True, register=True)
 dag.addJob(fasttext)
+dag.addDependency(Dependency(parent=concat_bpe, child=fasttext))
 
 LOGGER.info("Cross-lingual embeddings in: {0}".format(bpe_vec.name))
+
+
+###########################################################################
+################################ Training #################################
+###########################################################################
+
+
+training = Job("training")
+training_out = File("training.out".format(lang_bpe_all.name))
+training.addArguments(TODO)
+dag.addJob(training)
+
+training.uses(training_out, link=Link.OUTPUT, transfer=True, register=True)
+training.setStdout(training_out)
+
+training.uses(, link=Link.INPUT)
+dag.addDependency(Dependency(parent=, child=training))
+
+LOGGER.info("Unsupervised training => ".format(training_out.name))
+
+# python main.py --exp_name test --transformer True --n_enc_layers 4 --n_dec_layers 4 --share_enc 3 --share_dec 3 --share_lang_emb True --share_output_emb True --langs 'en,fr' --n_mono -1 --mono_dataset 'en:./data/mono/all.en.tok.60000.pth,,;fr:./data/mono/all.fr.tok.60000.pth,,' --para_dataset 'en-fr:,./data/para/dev/newstest2013-ref.XX.60000.pth,./data/para/dev/newstest2014-fren-src.XX.60000.pth' --mono_directions 'en,fr' --word_shuffle 3 --word_dropout 0.1 --word_blank 0.2 --pivo_directions 'fr-en-fr,en-fr-en' --pretrained_emb './data/mono/all.en-fr.60000.vec' --pretrained_out True --lambda_xe_mono '0:1,100000:0.1,300000:0' --lambda_xe_otfd 1 --otf_num_processes 30 --otf_sync_params_every 1000 --enc_optimizer adam,lr=0.0001 --epoch_size 500000 --stopping_criterion bleu_en_fr_valid,10
 
 
 ##################### BEGIN EXECUTABLE #####################
