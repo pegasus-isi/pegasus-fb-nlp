@@ -8,10 +8,24 @@ tr wget {
         os "LINUX"
         type "INSTALLED"
     }
+
+    site condorpool {
+        pfn "/bin/wget"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+    }
 }
 
 tr gzip {
     site local {
+        pfn "/bin/gunzip"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+    }
+
+    site condorpool {
         pfn "/bin/gunzip"
         arch "x86_64"
         os "LINUX"
@@ -26,10 +40,24 @@ tr concat {
         os "LINUX"
         type "INSTALLED"
     }
+
+    site condorpool {
+        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/concatenate.sh"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+    }
 }
 
 tr concat-bpe {
     site local {
+        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/concat-bpe.sh"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+    }
+
+    site condorpool {
         pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/concat-bpe.sh"
         arch "x86_64"
         os "LINUX"
@@ -44,10 +72,24 @@ tr tokenize {
         os "LINUX"
         type "INSTALLED"
     }
+
+    site condorpool {
+        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/tokenize.sh"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+    }
 }
 
 tr learnbpe {
     site local {
+        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/fastBPE/fast"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+    }
+
+    site condorpool {
         pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/fastBPE/fast"
         arch "x86_64"
         os "LINUX"
@@ -62,10 +104,24 @@ tr applybpe {
         os "LINUX"
         type "INSTALLED"
     }
+
+    site condorpool {
+        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/fastBPE/fast"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+    }
 }
 
 tr getvocab {
     site local {
+        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/fastBPE/fast"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+    }
+
+    site condorpool {
         pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/fastBPE/fast"
         arch "x86_64"
         os "LINUX"
@@ -81,6 +137,13 @@ tr binarize {
         os "LINUX"
         type "INSTALLED"
     }
+
+    site condorpool {
+        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/preprocess.py"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+    }
 }
 
 tr fasttext {
@@ -90,10 +153,24 @@ tr fasttext {
         os "LINUX"
         type "INSTALLED"
     }
+
+    site condorpool {
+        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/fastText/fasttext"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+    }
 }
 
 tr training {
     site local {
+        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/main.py"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+    }
+
+    site condorpool {
         pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/main.py"
         arch "x86_64"
         os "LINUX"
