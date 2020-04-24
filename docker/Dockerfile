@@ -1,5 +1,5 @@
 # Use an official Ubuntu as a parent image
-FROM ubuntu:latest
+FROM ubuntu:20.04
 
 # Set the working directory to /
 WORKDIR /
@@ -8,17 +8,14 @@ RUN apt update && apt install -y --no-install-recommends wget curl python3 pytho
 RUN pip3 install --upgrade pip
 RUN ln -fs /usr/bin/python3 /usr/bin/python
 
-COPY src.tar.gz /
-RUN tar -xzvf src.tar.gz
-
 COPY requirements.txt /
 
-RUN git clone git@github.com:facebookresearch/UnsupervisedMT.git \
+RUN git clone https://github.com/facebookresearch/UnsupervisedMT.git && \
     git clone https://github.com/moses-smt/mosesdecoder.git && \
     git clone https://github.com/glample/fastBPE && \
     git clone https://github.com/facebookresearch/fastText.git
 
-RUN cd fastBPE/fastBPE && g++ -std=c++11 -pthread -O3 fastBPE/main.cc -o fast
+RUN cd fastBPE && g++ -std=c++11 -pthread -O3 fastBPE/main.cc -o fast
 
 RUN cd fastText/ && make
 
