@@ -24,11 +24,11 @@ export DIR
 pegasus-plan --conf pegasus.properties \
     --dax $DAXFILE \
     --dir $DIR/submit \
-    --input-dir $DIR/input \
+    --input-dir $DIR/input/mono \
     --output-dir $DIR/output \
     --cleanup leaf \
     --force \
-    --sites local \
+    --sites condorpool \
     --output-site local \
     -v \
     --submit

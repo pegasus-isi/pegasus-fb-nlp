@@ -25,7 +25,7 @@ MONO_PATH				= DATA_PATH + "mono"
 PARA_PATH				= DATA_PATH + "para"
 
 LANGS					= ['en', 'fr']
-YEARS					= [2007, 2008]
+YEARS					= [2007, 2008, 2009, 2010]
 
 # If we need to fetch data from server
 BASE_URL				= "http://www.statmt.org/wmt14/training-monolingual-news-crawl/"
@@ -129,6 +129,28 @@ dag = ADAG(DAG_ID)
 dag.metadata("creator", "%s@%s" % (USER, os.uname()[1]))
 dag.metadata("created", time.ctime())
 
+## Transformations
+wrapper_tokenizer = Executable("tokenize.sh", installed=False)
+wrapper_tokenizer.addPFN(PFN("file://"+PWD+"/bin/tokenize.sh", site="local"))
+wrapper_tokenizer.addPFN(PFN("file://"+PWD+"/bin/tokenize.sh", site="condorpool"))
+dag.addExecutable(wrapper_tokenizer)
+
+script_tokenizer = Executable("tokenizer.perl", installed=False)
+script_tokenizer.addPFN(PFN("file://"+PWD+"/bin/tokenizer/tokenizer.perl", site="local"))
+script_tokenizer.addPFN(PFN("file://"+PWD+"/bin/tokenizer/tokenizer.perl", site="condorpool"))
+dag.addExecutable(script_tokenizer)
+
+normalize_punctuation = Executable("normalize-punctuation.perl", installed=False)
+normalize_punctuation.addPFN(PFN("file://"+PWD+"/bin/tokenizer/normalize-punctuation.perl", site="local"))
+normalize_punctuation.addPFN(PFN("file://"+PWD+"/bin/tokenizer/normalize-punctuation.perl", site="condorpool"))
+dag.addExecutable(normalize_punctuation)
+
+x_tokenizer = Transformation("tokenize.sh")
+x_tokenizer.uses(wrapper_tokenizer)
+x_tokenizer.uses(script_tokenizer)
+x_tokenizer.uses(normalize_punctuation)
+dag.addTransformation(x_tokenizer)
+
 wget = []
 unzip = []
 dataset = []
@@ -195,23 +217,8 @@ for lang in range(len(LANGS)):
 
 	## Tokenize each language
 
-	## Transformations
-	wrapper_tokenizer = Executable(name="tokenize")
-	wrapper_tokenizer.addPFN(PFN("file://"+PWD+"/bin/tokenizer.sh", site="local"))
-	
-	script_tokenizer = Executable(name="tokenizer")
-	script_tokenizer.addPFN(PFN("file://"+PWD+"/bin/tokenizer/tokenizer.perl", site="local"))
-	
-	normalize_punctuation = Executable(name="normalize-punctuation")
-	normalize_punctuation.addPFN(PFN("file://"+PWD+"/bin/tokenizer/normalize-punctuation.perl", site="local"))
-	
-	x_tokenizer = Transformation(wrapper_tokenizer)
-	x_tokenizer.uses(script_tokenizer)
-	x_tokenizer.uses(normalize_punctuation)
-	
-	## End transformations
 
-	tokenize.append(Job(wrapper_tokenizer))
+	tokenize.append(Job(x_tokenizer))
 	lang_tok.append(File("{0}.tok".format(lang_raw.name)))
 	tokenize[lang].addArguments("-i", lang_raw.name, "-l", LANGS[lang], "-p", str(N_THREADS), "-o", lang_tok[lang].name)
 

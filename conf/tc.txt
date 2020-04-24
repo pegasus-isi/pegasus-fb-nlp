@@ -35,14 +35,14 @@ tr gzip {
 
 tr concat {
     site local {
-        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/concatenate.sh"
+        pfn "${PWD}/bin/concatenate.sh"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
     }
 
     site condorpool {
-        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/concatenate.sh"
+        pfn "${PWD}/bin/concatenate.sh"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -51,46 +51,31 @@ tr concat {
 
 tr concat-bpe {
     site local {
-        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/concat-bpe.sh"
+        pfn "${PWD}/bin/concat-bpe.sh"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
     }
 
     site condorpool {
-        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/concat-bpe.sh"
+        pfn "${PWD}/bin/concat-bpe.sh"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
     }
 }
 
-tr tokenize {
-    site local {
-        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/tokenize.sh"
-        arch "x86_64"
-        os "LINUX"
-        type "INSTALLED"
-    }
-
-    site condorpool {
-        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/tokenize.sh"
-        arch "x86_64"
-        os "LINUX"
-        type "INSTALLED"
-    }
-}
 
 tr learnbpe {
     site local {
-        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/fastBPE/fast"
+        pfn "${PWD}/bin/fastBPE/fast"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
     }
 
     site condorpool {
-        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/fastBPE/fast"
+        pfn "${PWD}/bin/fastBPE/fast"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -99,14 +84,14 @@ tr learnbpe {
 
 tr applybpe {
     site local {
-        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/fastBPE/fast"
+        pfn "${PWD}/bin/fastBPE/fast"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
     }
 
     site condorpool {
-        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/fastBPE/fast"
+        pfn "${PWD}/bin/fastBPE/fast"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -115,14 +100,14 @@ tr applybpe {
 
 tr getvocab {
     site local {
-        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/fastBPE/fast"
+        pfn "${PWD}/bin/fastBPE/fast"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
     }
 
     site condorpool {
-        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/fastBPE/fast"
+        pfn "${PWD}/bin/fastBPE/fast"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -132,14 +117,14 @@ tr getvocab {
 
 tr binarize {
     site local {
-        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/preprocess.py"
+        pfn "${PWD}/bin/preprocess.py"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
     }
 
     site condorpool {
-        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/preprocess.py"
+        pfn "${PWD}/bin/preprocess.py"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -148,14 +133,14 @@ tr binarize {
 
 tr fasttext {
     site local {
-        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/fastText/fasttext"
+        pfn "${PWD}/bin/fastText/fasttext"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
     }
 
     site condorpool {
-        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/fastText/fasttext"
+        pfn "${PWD}/bin/fastText/fasttext"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -164,14 +149,14 @@ tr fasttext {
 
 tr training {
     site local {
-        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/main.py"
+        pfn "${PWD}/bin/main.py"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
     }
 
     site condorpool {
-        pfn "/Users/lpottier/research/usc-isi/projects/active/ml-workflow/pegasus-fb-nlp/bin/main.py"
+        pfn "${PWD}/bin/main.py"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"

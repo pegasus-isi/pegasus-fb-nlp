@@ -8,8 +8,8 @@
 
 set -e
 
-TOKENIZER=bin/tokenizer/tokenizer.perl
-NORM_PUNC=bin/tokenizer/normalize-punctuation.perl
+TOKENIZER=$(pwd)/tokenizer_perl
+NORM_PUNC=$(pwd)/normalize-punctuation_perl
 
 while getopts 'i:l:p:o:' opt; do
     case $opt in
@@ -22,6 +22,10 @@ done
 
 # tokenize data
 echo "Tokenize monolingual data for $LANG..."
+
+echo $(pwd)
+echo "----"
+echo $(ls -alh)
 
 cat $INPUT | $NORM_PUNC -l $LANG | $TOKENIZER -l $LANG -no-escape -threads $THREADS > $OUTPUT
 
