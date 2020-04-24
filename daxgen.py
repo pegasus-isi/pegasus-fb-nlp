@@ -114,6 +114,8 @@ daxfile = sys.argv[1]
 USER = pwd.getpwuid(os.getuid())[0]
 PWD = os.path.dirname(os.path.realpath(__file__))
 
+MONO_PATH = PWD+'/'+MONO_PATH
+
 configure_logger(LOGGER)
 
 if len(LANGS) != 2:

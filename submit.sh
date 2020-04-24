@@ -21,13 +21,14 @@ export DIR
 # in the "submit" directory. The execution # site is "".
 # --input-dir tells Pegasus where to find workflow input files.
 # --output-dir tells Pegasus where to place workflow output files.
-pegasus-plan --conf conf/pegasus.properties \
+pegasus-plan --conf pegasus.properties \
     --dax $DAXFILE \
     --dir $DIR/submit \
     --input-dir $DIR/input \
     --output-dir $DIR/output \
     --cleanup leaf \
     --force \
-    --sites condorpool \
+    --sites local \
+    --output-site local \
     -v \
     --submit

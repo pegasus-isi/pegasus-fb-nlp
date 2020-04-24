@@ -10,7 +10,7 @@ tr wget {
     }
 }
 
-tr unzip {
+tr gzip {
     site local {
         pfn "/bin/gunzip"
         arch "x86_64"

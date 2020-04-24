@@ -29,7 +29,7 @@
 
         <!-- These profiles tell Pegasus that the site is a plain Condor pool -->
         <profile namespace="pegasus" key="style">condor</profile>
-        <profile namespace="condor" key="universe">vanilla</profile>
+        <profile namespace="condor" key="universe">local</profile>
 	    <!-- <profile namespace="condor" key="requirements">Machine == "workflow.isi.edu"</profile> -->
 	    <!-- This profile tells Pegasus to create two clustered jobs
             per level of the workflow, when horizontal clustering is
