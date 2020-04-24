@@ -129,27 +129,107 @@ dag = ADAG(DAG_ID)
 dag.metadata("creator", "%s@%s" % (USER, os.uname()[1]))
 dag.metadata("created", time.ctime())
 
-## Transformations
+
+######################## EXECUTABLES ########################
+
+exe_wget = Executable("wget", installed=True)
+exe_wget.addPFN(PFN("/bin/wget", site="local"))
+exe_wget.addPFN(PFN("/bin/wget", site="condorpool"))
+dag.addExecutable(exe_wget)
+
+exe_gzip = Executable("gzip", installed=True)
+exe_gzip.addPFN(PFN("/bin/gunzip", site="local"))
+exe_gzip.addPFN(PFN("/bin/gunzip", site="condorpool"))
+dag.addExecutable(exe_gzip)
+
+exe_concat = Executable("concat", installed=False)
+exe_concat.addPFN(PFN("file://"+PWD+"/bin/concatenate.sh", site="local"))
+exe_concat.addPFN(PFN("file://"+PWD+"/bin/concatenate.sh", site="condorpool"))
+dag.addExecutable(exe_concat)
+
+exe_concat = Executable("concat")
+exe_concat.addPFN(PFN("file://"+PWD+"/bin/concatenate.sh", site="local"))
+exe_concat.addPFN(PFN("file://"+PWD+"/bin/concatenate.sh", site="condorpool"))
+dag.addExecutable(exe_concat)
+
+exe_concat_bpe = Executable("concat-bpe")
+exe_concat_bpe.addPFN(PFN("file://"+PWD+"/bin/concat-bpe.sh", site="local"))
+exe_concat_bpe.addPFN(PFN("file://"+PWD+"/bin/concat-bpe.sh", site="condorpool"))
+dag.addExecutable(exe_concat_bpe)
+
+exe_learnbpe = Executable("learnbpe")
+exe_learnbpe.addPFN(PFN("file://"+PWD+"/bin/fastBPE/fast", site="local"))
+exe_learnbpe.addPFN(PFN("file://"+PWD+"/bin/fastBPE/fast", site="condorpool"))
+dag.addExecutable(exe_learnbpe)
+
+exe_applybpe = Executable("applybpe")
+exe_applybpe.addPFN(PFN("file://"+PWD+"/bin/fastBPE/fast", site="local"))
+exe_applybpe.addPFN(PFN("file://"+PWD+"/bin/fastBPE/fast", site="condorpool"))
+dag.addExecutable(exe_applybpe)
+
+exe_getvocab = Executable("getvocab")
+exe_getvocab.addPFN(PFN("file://"+PWD+"/bin/fastBPE/fast", site="local"))
+exe_getvocab.addPFN(PFN("file://"+PWD+"/bin/fastBPE/fast", site="condorpool"))
+dag.addExecutable(exe_getvocab)
+
+exe_fasttext = Executable("fasttext")
+exe_fasttext.addPFN(PFN("file://"+PWD+"/bin/fastBPE/fast", site="local"))
+exe_fasttext.addPFN(PFN("file://"+PWD+"/bin/fastBPE/fast", site="condorpool"))
+dag.addExecutable(exe_fasttext)
+
+## Transformations tokenize
 wrapper_tokenizer = Executable("tokenize.sh", installed=False)
 wrapper_tokenizer.addPFN(PFN("file://"+PWD+"/bin/tokenize.sh", site="local"))
 wrapper_tokenizer.addPFN(PFN("file://"+PWD+"/bin/tokenize.sh", site="condorpool"))
 dag.addExecutable(wrapper_tokenizer)
 
-script_tokenizer = Executable("tokenizer.perl", installed=False)
-script_tokenizer.addPFN(PFN("file://"+PWD+"/bin/tokenizer/tokenizer.perl", site="local"))
-script_tokenizer.addPFN(PFN("file://"+PWD+"/bin/tokenizer/tokenizer.perl", site="condorpool"))
+script_tokenizer = Executable("tokenizer.tar.gz", installed=False)
+script_tokenizer.addPFN(PFN("file://"+PWD+"/bin/tokenizer.tar.gz", site="local"))
+script_tokenizer.addPFN(PFN("file://"+PWD+"/bin/tokenizer.tar.gz", site="condorpool"))
 dag.addExecutable(script_tokenizer)
 
-normalize_punctuation = Executable("normalize-punctuation.perl", installed=False)
-normalize_punctuation.addPFN(PFN("file://"+PWD+"/bin/tokenizer/normalize-punctuation.perl", site="local"))
-normalize_punctuation.addPFN(PFN("file://"+PWD+"/bin/tokenizer/normalize-punctuation.perl", site="condorpool"))
-dag.addExecutable(normalize_punctuation)
+# normalize_punctuation = Executable("normalize-punctuation.perl", installed=False)
+# normalize_punctuation.addPFN(PFN("file://"+PWD+"/bin/tokenizer/normalize-punctuation.perl", site="local"))
+# normalize_punctuation.addPFN(PFN("file://"+PWD+"/bin/tokenizer/normalize-punctuation.perl", site="condorpool"))
+# dag.addExecutable(normalize_punctuation)
 
 x_tokenizer = Transformation("tokenize.sh")
 x_tokenizer.uses(wrapper_tokenizer)
 x_tokenizer.uses(script_tokenizer)
-x_tokenizer.uses(normalize_punctuation)
+# x_tokenizer.uses(normalize_punctuation)
 dag.addTransformation(x_tokenizer)
+
+## Transformations binarize
+wrapper_binarize = Executable("preprocess.sh", installed=False)
+wrapper_binarize.addPFN(PFN("file://"+PWD+"/bin/preprocess.sh", site="local"))
+wrapper_binarize.addPFN(PFN("file://"+PWD+"/bin/preprocess.sh", site="condorpool"))
+dag.addExecutable(wrapper_binarize)
+
+code_binarize = Executable("preprocess.tar.gz", installed=False)
+code_binarize.addPFN(PFN("file://"+PWD+"/bin/preprocess.tar.gz", site="local"))
+code_binarize.addPFN(PFN("file://"+PWD+"/bin/preprocess.tar.gz", site="condorpool"))
+dag.addExecutable(code_binarize)
+
+x_binarize = Transformation("preprocess.sh")
+x_binarize.uses(wrapper_binarize)
+x_binarize.uses(code_binarize)
+dag.addTransformation(x_binarize)
+
+## Transformations training
+wrapper_training = Executable("main.py", installed=False)
+wrapper_training.addPFN(PFN("file://"+PWD+"/bin/main.py", site="local"))
+wrapper_training.addPFN(PFN("file://"+PWD+"/bin/main.py", site="condorpool"))
+dag.addExecutable(wrapper_training)
+
+code_training = Executable("training.tar.gz", installed=False)
+code_training.addPFN(PFN("file://"+PWD+"/bin/training.tar.gz", site="local"))
+code_training.addPFN(PFN("file://"+PWD+"/bin/training.tar.gz", site="condorpool"))
+dag.addExecutable(code_binarize)
+
+x_training = Transformation("main.py")
+x_training.uses(wrapper_training)
+x_training.uses(code_training)
+dag.addTransformation(x_training)
 
 wget = []
 unzip = []
@@ -222,6 +302,7 @@ for lang in range(len(LANGS)):
 	lang_tok.append(File("{0}.tok".format(lang_raw.name)))
 	tokenize[lang].addArguments("-i", lang_raw.name, "-l", LANGS[lang], "-p", str(N_THREADS), "-o", lang_tok[lang].name)
 
+	tokenize[lang].uses(PWD+"bin/tokenizer.tar.gz", link=Link.INPUT)
 
 	tokenize[lang].uses(lang_raw, link=Link.INPUT)
 	tokenize[lang].uses(lang_tok[lang], link=Link.OUTPUT, transfer=True, register=True)
@@ -303,7 +384,7 @@ binarize = []
 lang_binarized = []
 
 for lang in range(len(LANGS)):
-	binarize.append(Job("binarize"))
+	binarize.append(Job(x_binarize))
 	binarize[lang].addArguments(lang_vocab_all.name, tok_codes[lang].name)
 	dag.addJob(binarize[lang])
 
@@ -397,7 +478,7 @@ LOGGER.info("Concatenated shuffled data in: {0}".format(lang_bpe_all.name))
 # MONO_DATASET = "'{0}:{1},,;{2}:{3},,'".format(LANGS[0], lang_binarized[0], LANGS[1], lang_binarized[1]) 
 # # PARA_DATASET = "'en-fr:,./data/para/dev/newstest2013-ref.XX.60000.pth,./data/para/dev/newstest2014-fren-src.XX.60000.pth'", 
 
-# training = Job("training")
+# training = Job(x_training)
 # training_out = File("trained-{0}-{1}.out".format(LANGS[0], LANGS[1]))
 
 # try:
