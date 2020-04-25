@@ -8,10 +8,8 @@
 
 set -e
 
-tar -xf tokenizer_tar_gz
-
-TOKENIZER=$(pwd)/tokenizer/scripts/tokenizer/tokenizer.perl
-NORM_PUNC=$(pwd)/tokenizer/scripts/tokenizer/normalize-punctuation.perl
+TOKENIZER=/mosesdecoder/scripts/tokenizer/tokenizer.perl
+NORM_PUNC=/mosesdecoder/scripts/tokenizer/normalize-punctuation.perl
 
 while getopts 'i:l:p:o:' opt; do
     case $opt in
@@ -24,10 +22,6 @@ done
 
 # tokenize data
 echo "Tokenize monolingual data for $LANG..."
-
-echo $(pwd)
-echo "----"
-echo $(ls -alh)
 
 cat $INPUT | $NORM_PUNC -l $LANG | $TOKENIZER -l $LANG -no-escape -threads $THREADS > $OUTPUT
 

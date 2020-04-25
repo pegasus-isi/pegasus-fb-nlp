@@ -27,5 +27,4 @@ echo "monolingual data concatenated in: $SRC_RAW"
 # check number of lines
 if ! [[ "$(wc -l < $SRC_RAW)" -eq "$N_MONO" ]]; then 
 	echo "ERROR: Number of lines ($(wc -l < $SRC_RAW)) doesn't match! Be sure you have $N_MONO sentences in your monolingual data." 
-    exit -1
 fi

@@ -1,64 +1,28 @@
 # This is the transformation catalog. It lists information about each of the
 # executables that are used by the workflow.
 
-tr wget {
-    site local {
-        pfn "/bin/wget"
-        arch "x86_64"
-        os "LINUX"
-        type "INSTALLED"
-    }
+cont fb_nlp {
+    # can be either docker or singularity
+    type "docker"
 
-    site condorpool {
-        pfn "/bin/wget"
-        arch "x86_64"
-        os "LINUX"
-        type "INSTALLED"
-    }
+    # URL to image in a docker|singularity hub OR
+    image "docker:///lpottier/fb-nlp:0.1"
+
+    #image_site "pegasus"
 }
 
-tr gzip {
+tr tokenize {
     site local {
-        pfn "/bin/gunzip"
+        container "fb_nlp"
+        pfn "/tokenize.sh"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
     }
 
     site condorpool {
-        pfn "/bin/gunzip"
-        arch "x86_64"
-        os "LINUX"
-        type "INSTALLED"
-    }
-}
-
-tr concat {
-    site local {
-        pfn "${PWD}/bin/concatenate.sh"
-        arch "x86_64"
-        os "LINUX"
-        type "INSTALLED"
-    }
-
-    site condorpool {
-        pfn "${PWD}/bin/concatenate.sh"
-        arch "x86_64"
-        os "LINUX"
-        type "INSTALLED"
-    }
-}
-
-tr concat-bpe {
-    site local {
-        pfn "${PWD}/bin/concat-bpe.sh"
-        arch "x86_64"
-        os "LINUX"
-        type "INSTALLED"
-    }
-
-    site condorpool {
-        pfn "${PWD}/bin/concat-bpe.sh"
+        container "fb_nlp"
+        pfn "/tokenize.sh"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -68,14 +32,16 @@ tr concat-bpe {
 
 tr learnbpe {
     site local {
-        pfn "${PWD}/bin/fastBPE/fast"
+        container "fb_nlp"
+        pfn "/fastBPE/fast"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
     }
 
     site condorpool {
-        pfn "${PWD}/bin/fastBPE/fast"
+        container "fb_nlp"
+        pfn "/fastBPE/fast"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -84,14 +50,16 @@ tr learnbpe {
 
 tr applybpe {
     site local {
-        pfn "${PWD}/bin/fastBPE/fast"
+        container "fb_nlp"
+        pfn "/fastBPE/fast"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
     }
 
     site condorpool {
-        pfn "${PWD}/bin/fastBPE/fast"
+        container "fb_nlp"
+        pfn "/fastBPE/fast"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -100,14 +68,16 @@ tr applybpe {
 
 tr getvocab {
     site local {
-        pfn "${PWD}/bin/fastBPE/fast"
+        container "fb_nlp"
+        pfn "/fastBPE/fast"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
     }
 
     site condorpool {
-        pfn "${PWD}/bin/fastBPE/fast"
+        container "fb_nlp"
+        pfn "/fastBPE/fast"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -117,14 +87,16 @@ tr getvocab {
 
 tr binarize {
     site local {
-        pfn "${PWD}/bin/preprocess.py"
+        container "fb_nlp"
+        pfn "/UnsupervisedMT/NMT/preprocess.py"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
     }
 
     site condorpool {
-        pfn "${PWD}/bin/preprocess.py"
+        container "fb_nlp"
+        pfn "/UnsupervisedMT/NMT/preprocess.py"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -133,14 +105,16 @@ tr binarize {
 
 tr fasttext {
     site local {
-        pfn "${PWD}/bin/fastText/fasttext"
+        container "fb_nlp"
+        pfn "/fastText/fasttext"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
     }
 
     site condorpool {
-        pfn "${PWD}/bin/fastText/fasttext"
+        container "fb_nlp"
+        pfn "/fastText/fasttext"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -149,28 +123,19 @@ tr fasttext {
 
 tr training {
     site local {
-        pfn "${PWD}/bin/main.py"
+        container "fb_nlp"
+        pfn "/UnsupervisedMT/NMT/main.py"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
     }
 
     site condorpool {
-        pfn "${PWD}/bin/main.py"
+        container "fb_nlp"
+        pfn "/UnsupervisedMT/NMT/main.py"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
     }
 }
-
-
-#cont moses {
-#    # can be either docker or singularity
-#    type "docker"
-#
-#    # URL to image in a docker|singularity hub OR
-#    image "docker:///lpottier/moses:latest"
-#
-#    #image_site "pegasus"
-#}
 
