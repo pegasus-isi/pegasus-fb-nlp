@@ -1,5 +1,5 @@
 # Use an official Ubuntu as a parent image
-FROM ubuntu:20.04
+FROM ubuntu:18.04
 
 # Set the working directory to /
 WORKDIR /

@@ -14,7 +14,7 @@ cont fb_nlp {
 tr tokenize {
     site local {
         container "fb_nlp"
-        pfn "/tokenize.sh"
+        pfn "file:///tokenize.sh"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -22,7 +22,7 @@ tr tokenize {
 
     site condorpool {
         container "fb_nlp"
-        pfn "/tokenize.sh"
+        pfn "file:///tokenize.sh"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -33,7 +33,7 @@ tr tokenize {
 tr learnbpe {
     site local {
         container "fb_nlp"
-        pfn "/fastBPE/fast"
+        pfn "file:///fastBPE/fast"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -41,7 +41,7 @@ tr learnbpe {
 
     site condorpool {
         container "fb_nlp"
-        pfn "/fastBPE/fast"
+        pfn "file:///fastBPE/fast"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -51,7 +51,7 @@ tr learnbpe {
 tr applybpe {
     site local {
         container "fb_nlp"
-        pfn "/fastBPE/fast"
+        pfn "file:///fastBPE/fast"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -59,7 +59,7 @@ tr applybpe {
 
     site condorpool {
         container "fb_nlp"
-        pfn "/fastBPE/fast"
+        pfn "file:///fastBPE/fast"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -69,7 +69,7 @@ tr applybpe {
 tr getvocab {
     site local {
         container "fb_nlp"
-        pfn "/fastBPE/fast"
+        pfn "file:///fastBPE/fast"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -77,7 +77,7 @@ tr getvocab {
 
     site condorpool {
         container "fb_nlp"
-        pfn "/fastBPE/fast"
+        pfn "file:///fastBPE/fast"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -88,7 +88,7 @@ tr getvocab {
 tr binarize {
     site local {
         container "fb_nlp"
-        pfn "/UnsupervisedMT/NMT/preprocess.py"
+        pfn "file:///UnsupervisedMT/NMT/preprocess.py"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -96,7 +96,7 @@ tr binarize {
 
     site condorpool {
         container "fb_nlp"
-        pfn "/UnsupervisedMT/NMT/preprocess.py"
+        pfn "file:///UnsupervisedMT/NMT/preprocess.py"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -106,7 +106,7 @@ tr binarize {
 tr fasttext {
     site local {
         container "fb_nlp"
-        pfn "/fastText/fasttext"
+        pfn "file:///fastText/fasttext"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -114,7 +114,7 @@ tr fasttext {
 
     site condorpool {
         container "fb_nlp"
-        pfn "/fastText/fasttext"
+        pfn "file:///fastText/fasttext"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -124,7 +124,7 @@ tr fasttext {
 tr training {
     site local {
         container "fb_nlp"
-        pfn "/UnsupervisedMT/NMT/main.py"
+        pfn "file:///UnsupervisedMT/NMT/main.py"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -132,7 +132,7 @@ tr training {
 
     site condorpool {
         container "fb_nlp"
-        pfn "/UnsupervisedMT/NMT/main.py"
+        pfn "file:///UnsupervisedMT/NMT/main.py"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"

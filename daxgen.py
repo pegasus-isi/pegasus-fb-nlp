@@ -26,7 +26,7 @@ MONO_PATH				= DATA_PATH + "mono"
 PARA_PATH				= DATA_PATH + "para"
 
 LANGS					= ['en', 'fr']
-YEARS					= [2007, 2008, 2009, 2010]
+YEARS					= [2007]
 
 # If we need to fetch data from server
 BASE_URL				= "http://www.statmt.org/wmt14/training-monolingual-news-crawl/"
@@ -298,8 +298,6 @@ for lang in range(len(LANGS)):
 	tokenize.append(Job("tokenize"))
 	lang_tok.append(File("{0}.tok".format(lang_raw.name)))
 	tokenize[lang].addArguments("-i", lang_raw.name, "-l", LANGS[lang], "-p", str(N_THREADS), "-o", lang_tok[lang].name)
-
-	tokenize[lang].uses(PWD+"bin/tokenizer.tar.gz", link=Link.INPUT)
 
 	tokenize[lang].uses(lang_raw, link=Link.INPUT)
 	tokenize[lang].uses(lang_tok[lang], link=Link.OUTPUT, transfer=True, register=True)
