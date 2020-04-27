@@ -331,13 +331,14 @@ lang_vocab = []
 for lang in range(len(LANGS)):
 	## Apply BPE codes
 	apply_bpe.append(Job("applybpe"))
-	apply_bpe[lang].addArguments("applybpe", str(CODES), " ".join([x.name for x in src_tok]))
 	
 	tok_codes.append(File("{0}.{1}".format(lang_tok[lang].name, str(CODES))))
 	apply_bpe[lang].uses(bpe_codes, link=Link.INPUT)
 	apply_bpe[lang].uses(lang_tok[lang], link=Link.INPUT)
 	apply_bpe[lang].uses(tok_codes[lang], link=Link.OUTPUT, transfer=True, register=True)
 	
+	apply_bpe[lang].addArguments("applybpe", tok_codes[lang].name, lang_tok[lang].name, bpe_codes.name)
+
 	dag.addJob(apply_bpe[lang])
 	dag.addDependency(Dependency(parent=fast_bpe, child=apply_bpe[lang]))
 
