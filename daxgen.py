@@ -26,7 +26,7 @@ MONO_PATH				= DATA_PATH + "mono"
 PARA_PATH				= DATA_PATH + "para"
 
 LANGS					= ['en', 'fr']
-YEARS					= [2007]
+YEARS					= [2007, 2008]
 
 # If we need to fetch data from server
 BASE_URL				= "http://www.statmt.org/wmt14/training-monolingual-news-crawl/"
@@ -137,21 +137,25 @@ dag.metadata("created", time.ctime())
 exe_wget = Executable("wget", installed=True)
 exe_wget.addPFN(PFN("/bin/wget", site="local"))
 exe_wget.addPFN(PFN("/bin/wget", site="condorpool"))
+exe_wget.addProfile(Profile(Namespace.PEGASUS, "memory", 50000)); # in MB
 dag.addExecutable(exe_wget)
 
 exe_gzip = Executable("gzip", installed=True)
 exe_gzip.addPFN(PFN("/bin/gunzip", site="local"))
 exe_gzip.addPFN(PFN("/bin/gunzip", site="condorpool"))
+exe_gzip.addProfile(Profile(Namespace.PEGASUS, "memory", 50000)); # in MB
 dag.addExecutable(exe_gzip)
 
 exe_concat = Executable("concat", installed=False)
 exe_concat.addPFN(PFN("file://"+PWD+"/bin/concatenate.sh", site="local"))
 exe_concat.addPFN(PFN("file://"+PWD+"/bin/concatenate.sh", site="condorpool"))
+exe_concat.addProfile(Profile(Namespace.PEGASUS, "memory", 50000)); # in MB
 dag.addExecutable(exe_concat)
 
 exe_concat_bpe = Executable("concat-bpe", installed=False)
 exe_concat_bpe.addPFN(PFN("file://"+PWD+"/bin/concat-bpe.sh", site="local"))
 exe_concat_bpe.addPFN(PFN("file://"+PWD+"/bin/concat-bpe.sh", site="condorpool"))
+exe_concat_bpe.addProfile(Profile(Namespace.PEGASUS, "memory", 50000)); # in MB
 dag.addExecutable(exe_concat_bpe)
 
 # exe_learnbpe = Executable("learnbpe", container=CONTAINER)
@@ -390,9 +394,10 @@ for lang in range(len(LANGS)):
 	binarize[lang].uses(tok_codes[lang], link=Link.INPUT)
 
 	binarize[lang].uses(lang_binarized[lang], link=Link.OUTPUT, transfer=True, register=True)
-	binarize[lang].setStdout(lang_binarized[lang])
+	#binarize[lang].setStdout(lang_binarized[lang])
 
 	dag.addDependency(Dependency(parent=extract_vocab_all, child=binarize[lang]))
+	dag.addDependency(Dependency(parent=apply_bpe[lang], child=binarize[lang]))
 
 	LOGGER.info("{0} binarized data in: {1}".format(LANGS[lang], lang_binarized[lang].name))
 

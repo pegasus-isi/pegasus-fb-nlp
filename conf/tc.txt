@@ -18,6 +18,7 @@ tr tokenize {
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
+		profile pegasus "memory" "50000"
     }
 
     site condorpool {
@@ -26,6 +27,7 @@ tr tokenize {
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
+		profile pegasus "memory" "50000"
     }
 }
 
@@ -37,6 +39,7 @@ tr learnbpe {
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
+		profile pegasus "memory" "50000"
     }
 
     site condorpool {
@@ -45,6 +48,7 @@ tr learnbpe {
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
+		profile pegasus "memory" "50000"
     }
 }
 
@@ -55,6 +59,7 @@ tr applybpe {
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
+		profile pegasus "memory" "50000"
     }
 
     site condorpool {
@@ -63,6 +68,7 @@ tr applybpe {
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
+		profile pegasus "memory" "50000"
     }
 }
 
@@ -73,6 +79,7 @@ tr getvocab {
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
+		profile pegasus "memory" "50000"
     }
 
     site condorpool {
@@ -81,6 +88,7 @@ tr getvocab {
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
+		profile pegasus "memory" "50000"
     }
 }
 
@@ -92,6 +100,7 @@ tr binarize {
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
+		profile pegasus "memory" "50000"
     }
 
     site condorpool {
@@ -100,6 +109,7 @@ tr binarize {
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
+		profile pegasus "memory" "50000"
     }
 }
 
@@ -110,6 +120,7 @@ tr fasttext {
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
+		profile pegasus "memory" "50000"
     }
 
     site condorpool {
@@ -118,6 +129,7 @@ tr fasttext {
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
+		profile pegasus "memory" "50000"
     }
 }
 
@@ -128,6 +140,7 @@ tr training {
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
+		profile pegasus "memory" "50000"
     }
 
     site condorpool {
@@ -136,6 +149,7 @@ tr training {
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
+		profile pegasus "memory" "50000"
     }
 }
 
