@@ -452,29 +452,29 @@ LOGGER.info("Concatenated shuffled data in: {0}".format(lang_bpe_all.name))
 
 ## Actual training with fastText
 
-# LOGGER.info("Pre-training fastText on: {0}".format(lang_bpe_all.name))
+LOGGER.info("Pre-training fastText on: {0}".format(lang_bpe_all.name))
 
-# fasttext = Job("fasttext")
-# bpe_vec = File("{0}.vec".format(lang_bpe_all.name))
-# fasttext.addArguments(
-# 	"skipgram", "-epoch", str(N_EPOCHS), 
-# 	"-minCount", "0", "-dim", "512", "-thread", 
-# 	str(N_THREADS), "-ws", "5", "-neg", "10", 
-# 	"-input", lang_bpe_all.name, 
-# 	"-output", lang_bpe_all.name
-# )
+fasttext = Job("fasttext")
+bpe_vec = File("{0}.vec".format(lang_bpe_all.name))
+fasttext.addArguments(
+	"skipgram", "-epoch", str(N_EPOCHS), 
+	"-minCount", "0", "-dim", "512", "-thread", 
+	str(N_THREADS), "-ws", "5", "-neg", "10", 
+	"-input", lang_bpe_all.name, 
+	"-output", lang_bpe_all.name
+)
 
-# fasttext.uses(lang_bpe_all, link=Link.INPUT)
-# fasttext.uses(bpe_vec, link=Link.OUTPUT, transfer=True, register=True)
-# dag.addJob(fasttext)
-# dag.addDependency(Dependency(parent=concat_bpe, child=fasttext))
+fasttext.uses(lang_bpe_all, link=Link.INPUT)
+fasttext.uses(bpe_vec, link=Link.OUTPUT, transfer=True, register=True)
+dag.addJob(fasttext)
+dag.addDependency(Dependency(parent=concat_bpe, child=fasttext))
 
-# LOGGER.info("Cross-lingual embeddings in: {0}".format(bpe_vec.name))
+LOGGER.info("Cross-lingual embeddings in: {0}".format(bpe_vec.name))
 
 
-# ###########################################################################
-# ################################ Training #################################
-# ###########################################################################
+###########################################################################
+################################ Training #################################
+###########################################################################
 
 # MONO_DATASET = "'{0}:{1},,;{2}:{3},,'".format(LANGS[0], lang_binarized[0], LANGS[1], lang_binarized[1]) 
 # # PARA_DATASET = "'en-fr:,./data/para/dev/newstest2013-ref.XX.60000.pth,./data/para/dev/newstest2014-fren-src.XX.60000.pth'", 
