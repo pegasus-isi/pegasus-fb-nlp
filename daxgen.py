@@ -38,7 +38,7 @@ BASE_URL				= "http://www.statmt.org/wmt14/training-monolingual-news-crawl/"
 N_MONO					= 10000000			# number of monolingual sentences for each language
 CODES 					= 60000				# number of BPE codes
 N_THREADS 				= 16				# number of threads in data preprocessing
-N_EPOCHS				= 10				# number of fastText epochs
+N_EPOCHS				= 1					# number of fastText epochs
 
 ########################## END PRETRAINING #######################
 
@@ -475,66 +475,66 @@ LOGGER.info("Cross-lingual embeddings in: {0}".format(bpe_vec.name))
 ################################ Training #################################
 ###########################################################################
 
-# MONO_DATASET = "'{0}:{1},,;{2}:{3},,'".format(LANGS[0], lang_binarized[0], LANGS[1], lang_binarized[1]) 
-# # PARA_DATASET = "'en-fr:,./data/para/dev/newstest2013-ref.XX.60000.pth,./data/para/dev/newstest2014-fren-src.XX.60000.pth'", 
+MONO_DATASET = "'{0}:{1},,;{2}:{3},,'".format(LANGS[0], lang_binarized[0], LANGS[1], lang_binarized[1]) 
+# PARA_DATASET = "'en-fr:,./data/para/dev/newstest2013-ref.XX.60000.pth,./data/para/dev/newstest2014-fren-src.XX.60000.pth'", 
 
-# training = Job("training")
-# training_out = File("trained-{0}-{1}.out".format(LANGS[0], LANGS[1]))
+training = Job("training")
+training_out = File("trained-{0}-{1}.out".format(LANGS[0], LANGS[1]))
 
-# try:
-# 	training.addArguments(
-# 		'--exp_name', str(DAG_ID), 
-# 		'--transformer', str(TRANSFORMER), 
-# 		'--n_enc_layers', str(N_ENC_LAYERS), 
-# 		'--n_dec_layers', str(N_DEC_LAYERS), 
-# 		'--share_enc', str(SHARE_ENC), 
-# 		'--share_dec', str(SHARE_DEC), 
-# 		'--share_lang_emb', str(SHARE_LANG_EMB), 
-# 		'--share_output_emb', str(SHARE_OUTPUT_EMB), 
-# 		'--langs', str(MONO_DIRECTIONS), 
-# 		'--n_mono', '-1', 
-# 		'--mono_directions', str(MONO_DIRECTIONS),
-# 		'--mono_dataset', str(MONO_DATASET), 
-# 		# '--para_dataset', "'en-fr:,./data/para/dev/newstest2013-ref.XX.60000.pth,./data/para/dev/newstest2014-fren-src.XX.60000.pth'", 
-# 		'--word_shuffle', str(WORD_SHUFFLE), 
-# 		'--word_dropout', str(WORD_DROPOUT), 
-# 		'--word_blank', str(WORD_BLANK), 
-# 		'--pivo_directions', str(PIVO_DIRECTIONS), 
-# 		'--pretrained_emb', bpe_vec.name, 
-# 		'--pretrained_out', str(PRETRAINED_OUT), 
-# 		'--lambda_xe_mono', str(LAMBDA_XE_MONO), 
-# 		'--lambda_xe_otfd', str(LAMBDA_XE_OTFD), 
-# 		'--otf_num_processes', str(OTF_NUM_PROCESSES), 
-# 		'--otf_sync_params_every', str(OTF_SYNC_PARAMS_EVERY), 
-# 		'--enc_optimizer', str(ENC_OPTIMIZER), 
-# 		'--epoch_size', str(EPOCH_SIZE), 
-# 		'--stopping_criterion', str(STOPPING_CRITERION)
-# 	)
+try:
+	training.addArguments(
+		'--exp_name', str(DAG_ID), 
+		'--transformer', str(TRANSFORMER), 
+		'--n_enc_layers', str(N_ENC_LAYERS), 
+		'--n_dec_layers', str(N_DEC_LAYERS), 
+		'--share_enc', str(SHARE_ENC), 
+		'--share_dec', str(SHARE_DEC), 
+		'--share_lang_emb', str(SHARE_LANG_EMB), 
+		'--share_output_emb', str(SHARE_OUTPUT_EMB), 
+		'--langs', str(MONO_DIRECTIONS), 
+		'--n_mono', '-1', 
+		'--mono_directions', str(MONO_DIRECTIONS),
+		'--mono_dataset', str(MONO_DATASET), 
+		# '--para_dataset', "'en-fr:,./data/para/dev/newstest2013-ref.XX.60000.pth,./data/para/dev/newstest2014-fren-src.XX.60000.pth'", 
+		'--word_shuffle', str(WORD_SHUFFLE), 
+		'--word_dropout', str(WORD_DROPOUT), 
+		'--word_blank', str(WORD_BLANK), 
+		'--pivo_directions', str(PIVO_DIRECTIONS), 
+		'--pretrained_emb', bpe_vec.name, 
+		'--pretrained_out', str(PRETRAINED_OUT), 
+		'--lambda_xe_mono', str(LAMBDA_XE_MONO), 
+		'--lambda_xe_otfd', str(LAMBDA_XE_OTFD), 
+		'--otf_num_processes', str(OTF_NUM_PROCESSES), 
+		'--otf_sync_params_every', str(OTF_SYNC_PARAMS_EVERY), 
+		'--enc_optimizer', str(ENC_OPTIMIZER), 
+		'--epoch_size', str(EPOCH_SIZE), 
+		'--stopping_criterion', str(STOPPING_CRITERION)
+	)
 
-# except FormatError as e:
-# 	LOGGER.error("Invalid argument given to the trainer:")
-# 	error_lines = traceback.format_exc().splitlines()
-# 	for err in error_lines:
-# 		if "--" in err:
-# 			tmp=STOPPING_CRITERION
-# 			LOGGER.error("\t {0}".format(err))
+except FormatError as e:
+	LOGGER.error("Invalid argument given to the trainer:")
+	error_lines = traceback.format_exc().splitlines()
+	for err in error_lines:
+		if "--" in err:
+			tmp=STOPPING_CRITERION
+			LOGGER.error("\t {0}".format(err))
 
-# 	exit(-1)
+	exit(-1)
 
-# dag.addJob(training)
+dag.addJob(training)
 
-# training.uses(bpe_vec.name, link=Link.INPUT)
-# dag.addDependency(Dependency(parent=fasttext, child=training))
+training.uses(bpe_vec.name, link=Link.INPUT)
+dag.addDependency(Dependency(parent=fasttext, child=training))
 
-# for lang in range(len(LANGS)):
-# 	training.uses(lang_binarized[lang], link=Link.INPUT)
-# 	dag.addDependency(Dependency(parent=binarize[lang], child=training))
+for lang in range(len(LANGS)):
+	training.uses(lang_binarized[lang], link=Link.INPUT)
+	dag.addDependency(Dependency(parent=binarize[lang], child=training))
 
 
-# training.uses(training_out, link=Link.OUTPUT, transfer=True, register=True)
-# training.setStdout(training_out)
+training.uses(training_out, link=Link.OUTPUT, transfer=True, register=True)
+training.setStdout(training_out)
 
-# LOGGER.info("Model trained => {0}".format(training_out.name))
+LOGGER.info("Model trained => {0}".format(training_out.name))
 
 ###########################################################################
 #############################  End Training ###############################

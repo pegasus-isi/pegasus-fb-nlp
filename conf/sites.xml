@@ -30,18 +30,5 @@
         <!-- These profiles tell Pegasus that the site is a plain Condor pool -->
         <profile namespace="pegasus" key="style">condor</profile>
         <profile namespace="condor" key="universe">vanilla</profile>
-	    <!--<profile namespace="pegasus" key="auxillary.local">true</profile>-->
-        <!--<profile namespace="env" key="PEGASUS_HOME">/nfs/v5/lpottier/pegasus/dist/pegasus-5.0.0dev/</profile>-->
-        <!--<profile namespace="env" key="PEGASUS_HOME">/nfs/v5/lpottier/pegasus-4.9/dist/pegasus-4.9.4dev/bin</profile>-->
-        
-        <!--<profile namespace="condor" key="transfer_executable">true</profile>-->
-
-        <!-- <profile namespace="condor" key="requirements">Machine == "workflow.isi.edu"</profile> -->
-	    <!-- This profile tells Pegasus to create two clustered jobs
-            per level of the workflow, when horizontal clustering is
-            enabled -->
-        <!-- <profile namespace="pegasus" key="clusters.num" >2</profile> -->
-        <!--<profile namespace="pegasus" key="data.configuration">condorio</profile>-->
-        <!-- <profile namespace="condor" key="request_memory" >8000</profile> -->
     </site>
 </sitecatalog>
