@@ -18,7 +18,7 @@ tr tokenize {
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
-		profile pegasus "memory" "50000"
+		profile condor "request_memory" "10G"
     }
 
     site condorpool {
@@ -27,7 +27,9 @@ tr tokenize {
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
-		profile pegasus "memory" "50000"
+		#profile pegasus "memory" "50000"
+		profile condor "request_memory" "10G"
+		profile condor "request_cpu" "8"
     }
 }
 
@@ -120,7 +122,8 @@ tr fasttext {
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
-		profile pegasus "memory" "50000"
+		profile condor "request_memory" "10G"
+		profile condor "request_cpu" "8"
     }
 
     site condorpool {
@@ -129,7 +132,8 @@ tr fasttext {
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
-		profile pegasus "memory" "50000"
+		profile condor "request_memory" "10G"
+		profile condor "request_cpu" "8"
     }
 }
 
@@ -140,7 +144,8 @@ tr training {
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
-		profile pegasus "memory" "50000"
+		profile condor "request_memory" "10G"
+		profile condor "request_cpu" "8"
     }
 
     site condorpool {
@@ -149,7 +154,8 @@ tr training {
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
-		profile pegasus "memory" "50000"
+		profile condor "request_memory" "10G"
+		profile condor "request_cpu" "8"
     }
 }
 

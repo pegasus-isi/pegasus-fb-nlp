@@ -37,7 +37,7 @@ BASE_URL				= "http://www.statmt.org/wmt14/training-monolingual-news-crawl/"
 
 N_MONO					= 10000000			# number of monolingual sentences for each language
 CODES 					= 60000				# number of BPE codes
-N_THREADS 				= 4					# number of threads in data preprocessing
+N_THREADS 				= 16				# number of threads in data preprocessing
 N_EPOCHS				= 10				# number of fastText epochs
 
 ########################## END PRETRAINING #######################
@@ -137,25 +137,24 @@ dag.metadata("created", time.ctime())
 exe_wget = Executable("wget", installed=True)
 exe_wget.addPFN(PFN("/bin/wget", site="local"))
 exe_wget.addPFN(PFN("/bin/wget", site="condorpool"))
-exe_wget.addProfile(Profile(Namespace.PEGASUS, "memory", 50000)); # in MB
 dag.addExecutable(exe_wget)
 
 exe_gzip = Executable("gzip", installed=True)
 exe_gzip.addPFN(PFN("/bin/gunzip", site="local"))
 exe_gzip.addPFN(PFN("/bin/gunzip", site="condorpool"))
-exe_gzip.addProfile(Profile(Namespace.PEGASUS, "memory", 50000)); # in MB
+exe_gzip.addProfile(Profile(Namespace.CONDOR, "request_memory", "10G")); # in MB
 dag.addExecutable(exe_gzip)
 
 exe_concat = Executable("concat", installed=False)
 exe_concat.addPFN(PFN("file://"+PWD+"/bin/concatenate.sh", site="local"))
 exe_concat.addPFN(PFN("file://"+PWD+"/bin/concatenate.sh", site="condorpool"))
-exe_concat.addProfile(Profile(Namespace.PEGASUS, "memory", 50000)); # in MB
+exe_concat.addProfile(Profile(Namespace.CONDOR, "request_memory", "10G")); # in MB
 dag.addExecutable(exe_concat)
 
 exe_concat_bpe = Executable("concat-bpe", installed=False)
 exe_concat_bpe.addPFN(PFN("file://"+PWD+"/bin/concat-bpe.sh", site="local"))
 exe_concat_bpe.addPFN(PFN("file://"+PWD+"/bin/concat-bpe.sh", site="condorpool"))
-exe_concat_bpe.addProfile(Profile(Namespace.PEGASUS, "memory", 50000)); # in MB
+exe_concat_bpe.addProfile(Profile(Namespace.CONDOR, "request_memory", "10G")); # in MB
 dag.addExecutable(exe_concat_bpe)
 
 # exe_learnbpe = Executable("learnbpe", container=CONTAINER)

@@ -1,4 +1,4 @@
-# file-based replica catalog: 2020-04-30T12:36:31.047-07:00
+# file-based replica catalog: 2020-05-02T21:26:20.063-07:00
 *.gz file:///nfs/v5/lpottier/ml-workflows/nlp/pegasus-fb-nlp/submit/lpottier/pegasus/fb-nlp-nmt/run0024/input/mono/[0] regex="true" site="local"
 all.fr file:///nfs/v5/lpottier/ml-workflows/nlp/pegasus-fb-nlp/output/all.fr site="local"
 all.en file:///nfs/v5/lpottier/ml-workflows/nlp/pegasus-fb-nlp/output/all.en site="local"
@@ -13,3 +13,4 @@ vocab.fr.60000 file:///nfs/v5/lpottier/ml-workflows/nlp/pegasus-fb-nlp/output/vo
 all.en-fr.60000 file:///nfs/v5/lpottier/ml-workflows/nlp/pegasus-fb-nlp/output/all.en-fr.60000 site="local"
 all.en.tok.60000.pth file:///nfs/v5/lpottier/ml-workflows/nlp/pegasus-fb-nlp/output/all.en.tok.60000.pth site="local"
 all.fr.tok.60000.pth file:///nfs/v5/lpottier/ml-workflows/nlp/pegasus-fb-nlp/output/all.fr.tok.60000.pth site="local"
+all.en-fr.60000.vec file:///nfs/v5/lpottier/ml-workflows/nlp/pegasus-fb-nlp/output/all.en-fr.60000.vec site="local"
