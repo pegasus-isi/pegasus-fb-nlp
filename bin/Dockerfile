@@ -8,7 +8,7 @@ RUN apt update && apt install -y --no-install-recommends wget curl python3 pytho
 RUN pip3 install --upgrade pip
 RUN ln -fs /usr/bin/python3 /usr/bin/python
 
-COPY requirements.txt tokenize.sh concatenate.sh concat-bpe.sh preprocess.sh /
+COPY requirements.txt tokenize.sh concatenate.sh concat-bpe.sh preprocess.sh tokenize-validation.sh /
 
 RUN git clone https://github.com/facebookresearch/UnsupervisedMT.git && \
     git clone https://github.com/moses-smt/mosesdecoder.git && \
