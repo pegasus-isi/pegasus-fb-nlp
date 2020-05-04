@@ -10,7 +10,7 @@ RUN ln -fs /usr/bin/python3 /usr/bin/python
 
 COPY requirements.txt tokenize.sh concatenate.sh concat-bpe.sh preprocess.sh tokenize-validation.sh /
 
-RUN git clone https://github.com/facebookresearch/UnsupervisedMT.git && \
+RUN git clone https://github.com/lpottier/UnsupervisedMT.git && \
     git clone https://github.com/moses-smt/mosesdecoder.git && \
     git clone https://github.com/glample/fastBPE && \
     git clone https://github.com/facebookresearch/fastText.git

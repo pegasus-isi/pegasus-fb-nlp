@@ -12,6 +12,9 @@ from logging import Logger
 
 from Pegasus.DAX3 import *
 
+USER = pwd.getpwuid(os.getuid())[0]
+PWD = os.path.dirname(os.path.realpath(__file__))
+
 ######################## WORKFLOW PARAMETER ########################
 
 DAG_ID					= "fb-nlp-nmt"
@@ -22,8 +25,9 @@ CONTAINER				= "fb_nlp"
 
 ######################## PREPROCESS PARAMETER ######################
 
-MONO_PATH				= DATA_PATH + "mono"
-PARA_PATH				= DATA_PATH + "para"
+MONO_PATH				= PWD + '/' + DATA_PATH + "mono"
+PARA_PATH				= PWD + '/' + DATA_PATH + "para"
+TEST_DATA				= "dev.tgz"
 
 LANGS					= ['en', 'fr']
 YEARS					= [2007, 2008]
@@ -111,11 +115,6 @@ if len(sys.argv) != 2:
 	sys.stderr.write("Usage: %s DAXFILE\n" % (sys.argv[0]))
 	sys.exit(1)
 daxfile = sys.argv[1]
-
-USER = pwd.getpwuid(os.getuid())[0]
-PWD = os.path.dirname(os.path.realpath(__file__))
-
-MONO_PATH = PWD+'/'+MONO_PATH
 
 configure_logger(LOGGER)
 
@@ -405,10 +404,24 @@ for lang in range(len(LANGS)):
 ################### parallel data (for evaluation only) ###################
 ###########################################################################
 
-## TODO
+## TODO: recreate the Docker image with tokenize-validation.sh
 
 # echo "Extracting parallel data..."
 # tar -xzf dev.tgz
+
+# if TEST:
+# 	extract_test_data = Job("gunzip")
+# 	test_data_file = File(TEST_DATA[:-3])
+# 	extract_test_data.uses(TEST_DATA, link=Link.INPUT)
+# 	extract_test_data.uses(test_data_file, link=Link.OUTPUT, transfer=True, register=True)
+# 	dag.addJob(extract_test_data)
+
+# # SRC_VALID=input/data/para/dev/newstest2013-ref.en
+# # TGT_VALID=input/data/para/dev/newstest2013-ref.fr
+# # SRC_TEST=input/data/para/dev/newstest2014-fren-src.en
+# # TGT_TEST=input/data/para/dev/newstest2014-fren-src.fr
+
+
 
 # echo "Tokenizing valid and test data..."
 # $INPUT_FROM_SGM < $SRC_VALID.sgm | $NORM_PUNC -l en | $REM_NON_PRINT_CHAR | $TOKENIZER -l en -no-escape -threads $N_THREADS > $SRC_VALID
