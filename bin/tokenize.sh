@@ -8,8 +8,8 @@
 
 set -e
 
-TOKENIZER=/mosesdecoder/scripts/tokenizer/tokenizer.perl
-NORM_PUNC=/mosesdecoder/scripts/tokenizer/normalize-punctuation.perl
+TOKENIZER=/UnsupervisedMT/NMT/tools/mosesdecoder/scripts/tokenizer/tokenizer.perl
+NORM_PUNC=/UnsupervisedMT/NMT/tools/mosesdecoder/scripts/tokenizer/normalize-punctuation.perl
 
 while getopts 'i:l:p:o:' opt; do
     case $opt in
