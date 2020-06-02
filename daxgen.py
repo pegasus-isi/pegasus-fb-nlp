@@ -463,7 +463,7 @@ for lang in LANGS:
 
 	file_valid_sgm[lang] = File('{0}.sgm'.format(file_valid[lang].name))
 	
-	job_valid[lang].uses(file_valid[lang], link=Link.INPUT)
+	job_valid[lang].uses(file_valid_sgm[lang], link=Link.INPUT)
 
 	dag.addJob(job_valid[lang])
 	job_valid[lang].addArguments(file_valid_sgm[lang].name, lang, str(N_THREADS), file_valid[lang].name)
@@ -477,7 +477,7 @@ for lang in LANGS:
 	job_test[lang].uses(file_test[lang], link=Link.OUTPUT, transfer=True, register=True)
 	file_test_sgm[lang] = File('{0}.sgm'.format(file_test[lang].name))
 	
-	job_test[lang].uses(file_test[lang], link=Link.INPUT)
+	job_test[lang].uses(file_test_sgm[lang], link=Link.INPUT)
 
 	dag.addJob(job_test[lang])
 	job_test[lang].addArguments(file_test_sgm[lang].name, lang, str(N_THREADS), file_test[lang].name)
