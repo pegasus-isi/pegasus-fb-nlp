@@ -458,8 +458,7 @@ file_test_sgm = {}
 for lang in LANGS:
 	job_valid[lang] = Job("tokenize-validation")
 
-	file_valid[lang] = File('dev/newstest2013-ref.{0}'.format(lang))
-	job_valid[lang].setStdout(file_valid[lang])
+	file_valid[lang] = File('newstest2013-ref.{0}'.format(lang))
 	job_valid[lang].uses(file_valid[lang], link=Link.OUTPUT, transfer=False, register=False)
 
 	file_valid_sgm[lang] = File('{0}.sgm'.format(file_valid[lang].name))
@@ -467,7 +466,7 @@ for lang in LANGS:
 	job_valid[lang].uses(data_dev, link=Link.INPUT)
 
 	dag.addJob(job_valid[lang])
-	job_valid[lang].addArguments(file_valid_sgm[lang].name, lang, str(N_THREADS), file_valid[lang].name)
+	job_valid[lang].addArguments('dev/'+file_valid_sgm[lang].name, lang, str(N_THREADS), file_valid[lang].name)
 	dag.addDependency(Dependency(parent=unzip_dev, child=job_valid[lang]))
 	LOGGER.info("Tokenizing valid {0} data {1}".format(lang, file_valid[lang].name))
 
@@ -475,13 +474,12 @@ for lang in LANGS:
 	job_test[lang] = Job("tokenize-validation")
 	job_test[lang].uses(data_dev, link=Link.INPUT)
 
-	file_test[lang] = File('dev/newstest2014-{0}-src.{1}'.format(''.join(reversed(LANGS)),lang))
-	job_test[lang].setStdout(file_test[lang])
+	file_test[lang] = File('newstest2014-{0}-src.{1}'.format(''.join(reversed(LANGS)),lang))
 	job_test[lang].uses(file_test[lang], link=Link.OUTPUT, transfer=False, register=False)
 	file_test_sgm[lang] = File('{0}.sgm'.format(file_test[lang].name))
 
 	dag.addJob(job_test[lang])
-	job_test[lang].addArguments(file_test_sgm[lang].name, lang, str(N_THREADS), file_test[lang].name)
+	job_test[lang].addArguments('dev/'+file_test_sgm[lang].name, lang, str(N_THREADS), file_test[lang].name)
 	dag.addDependency(Dependency(parent=unzip_dev, child=job_test[lang]))
 	LOGGER.info("Tokenizing test {0} data {1}".format(lang, file_test[lang].name))
 
@@ -695,6 +693,12 @@ dag.addDependency(Dependency(parent=fasttext, child=training))
 for lang in range(len(LANGS)):
 	training.uses(lang_binarized[lang], link=Link.INPUT)
 	dag.addDependency(Dependency(parent=binarize[lang], child=training))
+
+for lang in LANGS:
+	training.uses(file_binarize_valid[lang], link=Link.INPUT)
+	training.uses(file_binarize_test[lang], link=Link.INPUT)	
+	dag.addDependency(Dependency(parent=job_binarize_valid[lang], child=training))
+	dag.addDependency(Dependency(parent=job_binarize_test[lang], child=training))
 
 
 training.uses(training_out, link=Link.OUTPUT, transfer=True, register=True)
