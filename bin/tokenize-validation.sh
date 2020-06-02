@@ -24,7 +24,11 @@ done
 
 # tokenize data
 echo "Tokenizing valid and test data $LANG..."
+echo "INPUT $INPUT"
+echo "LANG $LANG"
+echo "THREADS $THREADS"
+echo "OUTPUT $OUTPUT"
 
-$INPUT_FROM_SGM < $INPUT | $NORM_PUNC -l $LANG | $REM_NON_PRINT_CHAR | $TOKENIZER -l $LANG -no-escape -threads $THREADS > $OUTPUT
+$INPUT_FROM_SGM < "$INPUT" | $NORM_PUNC -l "$LANG" | $REM_NON_PRINT_CHAR | $TOKENIZER -l "$LANG" -no-escape -threads "$THREADS" > "$OUTPUT"
 
 echo "$LANG monolingual data tokenized and validated in: $OUTPUT"
