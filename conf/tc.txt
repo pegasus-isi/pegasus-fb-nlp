@@ -32,6 +32,26 @@ tr tokenize {
     }
 }
 
+tr tokenize-validation {
+    site local {
+        container "fb_nlp"
+        pfn "file:///tokenize-validation.sh"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+        profile condor "request_memory" "10G"
+    }
+
+    site condorpool {
+        container "fb_nlp"
+        pfn "file:///tokenize-validation.sh"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+        profile condor "request_memory" "10G"
+        profile condor "request_cpus" "8"
+    }
+}
 
 tr learnbpe {
     site local {
