@@ -422,16 +422,16 @@ for lang in range(len(LANGS)):
 
 
 input_dev = File(TEST_DATA)
-data_dev = File(input_dev.name.split('.')[0]) #Remove extension
+# data_dev = File(input_dev.name.split('.')[0]) #Remove extension
 
-unzip_dev = Job("gzip")
+# unzip_dev = Job("gzip")
 
-unzip_dev.uses(input_dev, link=Link.INPUT)
-unzip_dev.uses(data_dev, link=Link.OUTPUT, transfer=False, register=False)
+# unzip_dev.uses(input_dev, link=Link.INPUT)
+# unzip_dev.uses(data_dev, link=Link.OUTPUT, transfer=False, register=False)
 
-dag.addJob(unzip_dev)
-unzip_dev.addArguments(input_dev)
-LOGGER.info("Parallel test data {0} unzipped in: {1}".format(input_dev.name, data_dev.name))
+# dag.addJob(unzip_dev)
+# unzip_dev.addArguments(input_dev)
+# LOGGER.info("Parallel test data {0} unzipped in: {1}".format(input_dev.name, data_dev.name))
 
 ## Tokenizing valid and test data
 
@@ -461,13 +461,13 @@ for lang in LANGS:
 	file_valid[lang] = File('newstest2013-ref.{0}'.format(lang))
 	job_valid[lang].uses(file_valid[lang], link=Link.OUTPUT, transfer=True, register=True)
 
-	file_valid_sgm[lang] = File('{0}.sgm'.format(file_valid[lang].name))
+	# file_valid_sgm[lang] = File('{0}.sgm'.format(file_valid[lang].name))
 	
-	job_valid[lang].uses(file_valid_sgm[lang], link=Link.INPUT)
+	job_valid[lang].uses(input_dev, link=Link.INPUT)
 
 	dag.addJob(job_valid[lang])
 	job_valid[lang].addArguments(file_valid_sgm[lang].name, lang, str(N_THREADS), file_valid[lang].name)
-	dag.addDependency(Dependency(parent=unzip_dev, child=job_valid[lang]))
+	# dag.addDependency(Dependency(parent=unzip_dev, child=job_valid[lang]))
 	LOGGER.info("Tokenizing valid {0} data {1}".format(lang, file_valid[lang].name))
 
 	# Tokenizing test source data
@@ -475,13 +475,13 @@ for lang in LANGS:
 
 	file_test[lang] = File('newstest2014-{0}-src.{1}'.format(''.join(reversed(LANGS)),lang))
 	job_test[lang].uses(file_test[lang], link=Link.OUTPUT, transfer=True, register=True)
-	file_test_sgm[lang] = File('{0}.sgm'.format(file_test[lang].name))
+	# file_test_sgm[lang] = File('{0}.sgm'.format(file_test[lang].name))
 	
-	job_test[lang].uses(file_test_sgm[lang], link=Link.INPUT)
+	job_test[lang].uses(input_dev, link=Link.INPUT)
 
 	dag.addJob(job_test[lang])
 	job_test[lang].addArguments(file_test_sgm[lang].name, lang, str(N_THREADS), file_test[lang].name)
-	dag.addDependency(Dependency(parent=unzip_dev, child=job_test[lang]))
+	# dag.addDependency(Dependency(parent=unzip_dev, child=job_test[lang]))
 	LOGGER.info("Tokenizing test {0} data {1}".format(lang, file_test[lang].name))
 
 
