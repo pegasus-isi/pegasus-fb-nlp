@@ -1,4 +1,4 @@
-# file-based replica catalog: 2020-05-02T21:26:20.063-07:00
+# file-based replica catalog: 2020-05-05T11:44:13.717-07:00
 *.gz file:///nfs/v5/lpottier/ml-workflows/nlp/pegasus-fb-nlp/submit/lpottier/pegasus/fb-nlp-nmt/run0024/input/mono/[0] regex="true" site="local"
 all.fr file:///nfs/v5/lpottier/ml-workflows/nlp/pegasus-fb-nlp/output/all.fr site="local"
 all.en file:///nfs/v5/lpottier/ml-workflows/nlp/pegasus-fb-nlp/output/all.en site="local"

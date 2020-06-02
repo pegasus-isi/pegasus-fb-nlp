@@ -28,7 +28,7 @@ tr tokenize {
         os "LINUX"
         type "INSTALLED"
 		profile condor "request_memory" "10G"
-		profile condor "request_cpu" "8"
+		profile condor "request_cpus" "8"
     }
 }
 
@@ -36,7 +36,7 @@ tr tokenize {
 tr learnbpe {
     site local {
         container "fb_nlp"
-        pfn "file:///fastBPE/fast"
+        pfn "file:///UnsupervisedMT/NMT/tools/fastBPE/fast"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -45,7 +45,7 @@ tr learnbpe {
 
     site condorpool {
         container "fb_nlp"
-        pfn "file:///fastBPE/fast"
+        pfn "file:///UnsupervisedMT/NMT/tools/fastBPE/fast"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -56,7 +56,7 @@ tr learnbpe {
 tr applybpe {
     site local {
         container "fb_nlp"
-        pfn "file:///fastBPE/fast"
+        pfn "file:///UnsupervisedMT/NMT/tools/fastBPE/fast"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -65,7 +65,7 @@ tr applybpe {
 
     site condorpool {
         container "fb_nlp"
-        pfn "file:///fastBPE/fast"
+        pfn "file:///UnsupervisedMT/NMT/tools/fastBPE/fast"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -76,7 +76,7 @@ tr applybpe {
 tr getvocab {
     site local {
         container "fb_nlp"
-        pfn "file:///fastBPE/fast"
+        pfn "file:///UnsupervisedMT/NMT/tools/fastBPE/fast"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -85,7 +85,7 @@ tr getvocab {
 
     site condorpool {
         container "fb_nlp"
-        pfn "file:///fastBPE/fast"
+        pfn "file:///UnsupervisedMT/NMT/tools/fastBPE/fast"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
@@ -117,22 +117,22 @@ tr binarize {
 tr fasttext {
     site local {
         container "fb_nlp"
-        pfn "file:///fastText/fasttext"
+        pfn "file:///UnsupervisedMT/NMT/tools/fastText/fasttext"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
 		profile condor "request_memory" "10G"
-		profile condor "request_cpu" "8"
+		profile condor "request_cpus" "8"
     }
 
     site condorpool {
         container "fb_nlp"
-        pfn "file:///fastText/fasttext"
+        pfn "file:///UnsupervisedMT/NMT/tools/fastText/fasttext"
         arch "x86_64"
         os "LINUX"
         type "INSTALLED"
 		profile condor "request_memory" "10G"
-		profile condor "request_cpu" "8"
+		profile condor "request_cpus" "8"
     }
 }
 
@@ -144,7 +144,7 @@ tr training {
         os "LINUX"
         type "INSTALLED"
 		profile condor "request_memory" "10G"
-		profile condor "request_cpu" "8"
+		profile condor "request_cpus" "8"
     }
 
     site condorpool {
@@ -154,7 +154,7 @@ tr training {
         os "LINUX"
         type "INSTALLED"
 		profile condor "request_memory" "10G"
-		profile condor "request_cpu" "8"
+		profile condor "request_cpus" "8"
     }
 }
 

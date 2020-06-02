@@ -11,13 +11,16 @@ RUN ln -fs /usr/bin/python3 /usr/bin/python
 COPY requirements.txt tokenize.sh concatenate.sh concat-bpe.sh preprocess.sh tokenize-validation.sh /
 
 RUN git clone https://github.com/lpottier/UnsupervisedMT.git && \
-    git clone https://github.com/moses-smt/mosesdecoder.git && \
+	cd UnsupervisedMT/NMT/ && \
+	mkdir tools && \
+	cd tools && \
+	git clone https://github.com/moses-smt/mosesdecoder.git && \
     git clone https://github.com/glample/fastBPE && \
-    git clone https://github.com/facebookresearch/fastText.git
-
-RUN cd fastBPE && g++ -std=c++11 -pthread -O3 fastBPE/main.cc -o fast
-
-RUN cd fastText/ && make
+    git clone https://github.com/facebookresearch/fastText.git && \
+	cd fastBPE && \
+	g++ -std=c++11 -pthread -O3 fastBPE/main.cc -o fast && \
+	cd ../fastText/ && \
+	make
 
 # Install any needed packages specified in requirements.txt
 RUN pip3 install --trusted-host pypi.python.org -r requirements.txt

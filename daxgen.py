@@ -638,7 +638,7 @@ LOGGER.info("Cross-lingual embeddings in: {0}".format(bpe_vec.name))
 ################################ Training #################################
 ###########################################################################
 
-MONO_DATASET = "'{0}:{1},,;{2}:{3},,'".format(LANGS[0], lang_binarized[0], LANGS[1], lang_binarized[1]) 
+MONO_DATASET = "'{0}:{1},,;{2}:{3},,'".format(LANGS[0], lang_binarized[0].name, LANGS[1], lang_binarized[1].name) 
 # PARA_DATASET = "'{0}:,./data/para/dev/newstest2013-ref.XX.60000.pth,./data/para/dev/newstest2014-fren-src.XX.60000.pth'"
 PARA_DATASET = "'{0}:,{1},{2}'".format('-'.join(LANGS), corrected_valid, corrected_test)
 # Pretrained model produced by fasttext task

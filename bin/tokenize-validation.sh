@@ -8,10 +8,10 @@
 
 set -e
 
-INPUT_FROM_SGM=/mosesdecoder/scripts/ems/support/input-from-sgm.perl
-REM_NON_PRINT_CHAR=/mosesdecoder/scripts/tokenizer/remove-non-printing-char.perl
-TOKENIZER=/mosesdecoder/scripts/tokenizer/tokenizer.perl
-NORM_PUNC=/mosesdecoder/scripts/tokenizer/normalize-punctuation.perl
+INPUT_FROM_SGM=/UnsupervisedMT/NMT/tools/mosesdecoder/scripts/ems/support/input-from-sgm.perl
+REM_NON_PRINT_CHAR=/UnsupervisedMT/NMT/tools/mosesdecoder/scripts/tokenizer/remove-non-printing-char.perl
+TOKENIZER=/UnsupervisedMT/NMT/tools/mosesdecoder/scripts/tokenizer/tokenizer.perl
+NORM_PUNC=/UnsupervisedMT/NMT/tools/mosesdecoder/scripts/tokenizer/normalize-punctuation.perl
 
 while getopts 'i:l:p:o:' opt; do
     case $opt in
