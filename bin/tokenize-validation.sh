@@ -24,6 +24,8 @@ done
 
 # tokenize data
 echo "Tokenizing valid and test data $LANG..."
+echo "PWD $(pwd)"
+echo "LS $(ls -alh)"
 echo "INPUT $INPUT"
 echo "LANG $LANG"
 echo "THREADS $THREADS"
