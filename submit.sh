@@ -25,6 +25,7 @@ pegasus-plan --conf pegasus.properties \
     --dax $DAXFILE \
     --dir $DIR/submit \
     --input-dir $DIR/input/mono \
+	--input-dir $DIR/input/para \
     --output-dir $DIR/output \
     --cleanup leaf \
     --force \

@@ -1,3 +1,5 @@
-*.gz file://${PWD}/input/mono/[0] regex="true" site="local"
-dev.tgz file://${PWD}/input/para/dev.tgz site="local"
-*.sgm file://${PWD}/input/para/dev/[0] regex="true" site="local"
+# file-based replica catalog: 2020-06-03T11:02:45.182-07:00
+dev.tgz file:///nfs/v5/lpottier/ml-workflows/nlp/pegasus-fb-nlp/submit/lpottier/pegasus/fb-nlp-nmt/run0105/input/para/dev.tgz site="local"
+all.fr file:///nfs/v5/lpottier/ml-workflows/nlp/pegasus-fb-nlp/output/all.fr site="local"
+all.en file:///nfs/v5/lpottier/ml-workflows/nlp/pegasus-fb-nlp/output/all.en site="local"
+.*.gz file:///nfs/v5/lpottier/ml-workflows/nlp/pegasus-fb-nlp/submit/lpottier/pegasus/fb-nlp-nmt/run0105/input/mono/[0] regex="true" site="local"
