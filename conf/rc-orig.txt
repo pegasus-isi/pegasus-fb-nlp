@@ -1,0 +1,3 @@
+.*.gz file://${PWD}/input/mono/[0] regex="true" site="local"
+dev.tgz file://${PWD}/input/para/dev.tgz site="local"
+
