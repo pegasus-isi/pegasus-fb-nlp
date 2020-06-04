@@ -464,7 +464,8 @@ for lang in LANGS:
 	file_valid_sgm[lang] = File('{0}.sgm'.format(file_valid[lang].name))
 
 	dag.addJob(job_valid[lang])
-	job_valid[lang].addArguments(file_valid_sgm[lang].name, lang, str(N_THREADS), file_valid[lang].name)
+	job_valid[lang].addArguments("-i", file_valid_sgm[lang].name, "-l", lang, "-p", str(N_THREADS), "-o", file_valid[lang].name)
+
 	# dag.addDependency(Dependency(parent=unzip_dev, child=job_valid[lang]))
 	LOGGER.info("Tokenizing valid {0} data {1}".format(lang, file_valid[lang].name))
 
