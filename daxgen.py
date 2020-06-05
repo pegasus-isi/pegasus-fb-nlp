@@ -172,37 +172,36 @@ for lang in range(len(LANGS)):
 	dataset.append([])
 
 	for year in range(len(YEARS)):
-		current_input = File("{0}/news.{1}.{2}.shuffled.gz".format(BASE_URL, YEARS[year], LANGS[lang]))
-		input_unziped = current_input.name.split('/')[-1]
+		current_input = File("news.{1}.{2}.shuffled.gz".format(BASE_URL, YEARS[year], LANGS[lang]))
 
 		#If the data set is already there
-		if input_unziped not in files_already_there:
-			LOGGER.info("{} will be downloaded..".format(input_unziped))
+		if current_input.name not in files_already_there:
+			LOGGER.info("{} will be downloaded from {}..".format(current_input.name, BASE_URL))
 			wget[lang].append(Job("wget"))
-			wget[lang][year].addArguments("-c", current_input)
+			wget[lang][year].addArguments("-c", "{0}/{1}".format(BASE_URL, current_input.name))
 			wget[lang][year].uses(current_input, link=Link.OUTPUT, transfer=False, register=False)
 			dag.addJob(wget[lang][year])
 		else:
-			LOGGER.info("{0} found in {1}".format(input_unziped, MONO_PATH))
+			LOGGER.info("{0} found in {1}".format(current_input.name, MONO_PATH))
 
-		dataset[lang].append(File(input_unziped[:-3]))
+		dataset[lang].append(File(current_input.name[:-3]))
 
 		# if the data set is already unzipped
-		if input_unziped[:-3] not in files_already_there:
+		if dataset[lang][year].name not in files_already_there:
 			# gunzip
 			unzip[lang].append(Job("gzip"))
 
-			unzip[lang][year].uses(input_unziped, link=Link.INPUT)
+			unzip[lang][year].uses(current_input, link=Link.INPUT)
 			unzip[lang][year].uses(dataset[lang][year], link=Link.OUTPUT, transfer=False, register=False)
-			
+
 			dag.addJob(unzip[lang][year])
-			unzip[lang][year].addArguments(input_unziped)
+			unzip[lang][year].addArguments(current_input)
 
 			# Add dependency only of we download the datasets
-			if input_unziped not in files_already_there:
+			if current_input.name not in files_already_there:
 				dag.addDependency(Dependency(parent=wget[lang][year], child=unzip[lang][year]))
 		else:
-			LOGGER.info("{0} already unzipped in {1}".format(input_unziped, MONO_PATH))
+			LOGGER.info("{0} already unzipped in {1}".format(current_input.name, MONO_PATH))
 
 	## Concatenate data for each language
 
