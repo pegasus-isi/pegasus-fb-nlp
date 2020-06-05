@@ -132,7 +132,6 @@ dag.metadata("created", time.ctime())
 
 
 ######################## EXECUTABLES ########################
-# mycontainer = Container(CONTAINER, type="docker", image="docker:///lpottier/{0}:0.1".format(CONTAINER))
 
 exe_wget = Executable("wget", installed=True)
 exe_wget.addPFN(PFN("/bin/wget", site="local"))
@@ -156,80 +155,6 @@ exe_concat_bpe.addPFN(PFN("file://"+PWD+"/bin/concat-bpe.sh", site="local"))
 exe_concat_bpe.addPFN(PFN("file://"+PWD+"/bin/concat-bpe.sh", site="condorpool"))
 exe_concat_bpe.addProfile(Profile(Namespace.CONDOR, "request_memory", "10G")); # in MB
 dag.addExecutable(exe_concat_bpe)
-
-# exe_learnbpe = Executable("learnbpe", container=CONTAINER)
-# exe_learnbpe.addPFN(PFN("file://"+PWD+"/bin/fastBPE/fast", site="local"))
-# exe_learnbpe.addPFN(PFN("file://"+PWD+"/bin/fastBPE/fast", site="condorpool"))
-# dag.addExecutable(exe_learnbpe)
-
-# exe_applybpe = Executable("applybpe", container=CONTAINER)
-# exe_applybpe.addPFN(PFN("file://"+PWD+"/bin/fastBPE/fast", site="local"))
-# exe_applybpe.addPFN(PFN("file://"+PWD+"/bin/fastBPE/fast", site="condorpool"))
-# dag.addExecutable(exe_applybpe)
-
-# exe_getvocab = Executable("getvocab", container=CONTAINER)
-# exe_getvocab.addPFN(PFN("file://"+PWD+"/bin/fastBPE/fast", site="local"))
-# exe_getvocab.addPFN(PFN("file://"+PWD+"/bin/fastBPE/fast", site="condorpool"))
-# dag.addExecutable(exe_getvocab)
-
-# exe_fasttext = Executable("fasttext", container=CONTAINER)
-# exe_fasttext.addPFN(PFN("file://"+PWD+"/bin/fastBPE/fast", site="local"))
-# exe_fasttext.addPFN(PFN("file://"+PWD+"/bin/fastBPE/fast", site="condorpool"))
-# dag.addExecutable(exe_fasttext)
-
-# # ## Transformations tokenize
-# wrapper_tokenizer = Executable("tokenize", container=CONTAINER)
-# wrapper_tokenizer.addPFN(PFN("file:///tokenize.sh", site="local"))
-# wrapper_tokenizer.addPFN(PFN("file:///tokenize.sh", site="condorpool"))
-# dag.addExecutable(wrapper_tokenizer)
-
-# script_tokenizer = Executable("tokenizer.tar.gz", installed=False)
-# script_tokenizer.addPFN(PFN("file://"+PWD+"/bin/tokenizer.tar.gz", site="local"))
-# script_tokenizer.addPFN(PFN("file://"+PWD+"/bin/tokenizer.tar.gz", site="condorpool"))
-# dag.addExecutable(script_tokenizer)
-
-# # normalize_punctuation = Executable("normalize-punctuation.perl", installed=False)
-# # normalize_punctuation.addPFN(PFN("file://"+PWD+"/bin/tokenizer/normalize-punctuation.perl", site="local"))
-# # normalize_punctuation.addPFN(PFN("file://"+PWD+"/bin/tokenizer/normalize-punctuation.perl", site="condorpool"))
-# # dag.addExecutable(normalize_punctuation)
-
-# x_tokenizer = Transformation("tokenize.sh")
-# x_tokenizer.uses(wrapper_tokenizer)
-# x_tokenizer.uses(script_tokenizer)
-# # x_tokenizer.uses(normalize_punctuation)
-# dag.addTransformation(x_tokenizer)
-
-# ## Transformations binarize
-# wrapper_binarize = Executable("preprocess", container=CONTAINER)
-# wrapper_binarize.addPFN(PFN("file:///preprocess.py", site="local"))
-# wrapper_binarize.addPFN(PFN("file:///preprocess.py", site="condorpool"))
-# dag.addExecutable(wrapper_binarize)
-
-# code_binarize = Executable("preprocess.tar.gz", installed=False)
-# code_binarize.addPFN(PFN("file://"+PWD+"/bin/preprocess.tar.gz", site="local"))
-# code_binarize.addPFN(PFN("file://"+PWD+"/bin/preprocess.tar.gz", site="condorpool"))
-# dag.addExecutable(code_binarize)
-
-# x_binarize = Transformation("preprocess.sh")
-# x_binarize.uses(wrapper_binarize)
-# x_binarize.uses(code_binarize)
-# dag.addTransformation(x_binarize)
-
-# ## Transformations training
-# wrapper_training = Executable("training", container=CONTAINER)
-# wrapper_training.addPFN(PFN("file:///main.py", site="local"))
-# wrapper_training.addPFN(PFN("file:///main.py", site="condorpool"))
-# dag.addExecutable(wrapper_training)
-
-# code_training = Executable("training.tar.gz", installed=False)
-# code_training.addPFN(PFN("file://"+PWD+"/bin/training.tar.gz", site="local"))
-# code_training.addPFN(PFN("file://"+PWD+"/bin/training.tar.gz", site="condorpool"))
-# dag.addExecutable(code_binarize)
-
-# x_training = Transformation("main.py")
-# x_training.uses(wrapper_training)
-# x_training.uses(code_training)
-# dag.addTransformation(x_training)
 
 wget = []
 unzip = []
@@ -476,10 +401,10 @@ for lang in LANGS:
 	file_test[lang] = File('newstest2014-{0}-src.{1}'.format(''.join(reversed(LANGS)),lang))
 	job_test[lang].uses(file_test[lang], link=Link.OUTPUT, transfer=True, register=True)
 	file_test_sgm[lang] = File('{0}.sgm'.format(file_test[lang].name))
-	
+	job_test[lang].addArguments("-i", file_test_sgm[lang].name, "-l", lang, "-p", str(N_THREADS), "-o", file_test[lang].name)
+
 	dag.addJob(job_test[lang])
 
-	job_test[lang].addArguments(file_test_sgm[lang].name, lang, str(N_THREADS), file_test[lang].name)
 	# dag.addDependency(Dependency(parent=unzip_dev, child=job_test[lang]))
 	LOGGER.info("Tokenizing test {0} data {1}".format(lang, file_test[lang].name))
 
