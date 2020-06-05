@@ -195,7 +195,7 @@ for lang in range(len(LANGS)):
 			unzip[lang][year].uses(dataset[lang][year], link=Link.OUTPUT, transfer=False, register=False)
 
 			dag.addJob(unzip[lang][year])
-			unzip[lang][year].addArguments(current_input)
+			unzip[lang][year].addArguments(current_input.name)
 
 			# Add dependency only of we download the datasets
 			if current_input.name not in files_already_there:
@@ -431,7 +431,7 @@ for lang in LANGS:
 	job_apply_valid[lang].uses(file_valid[lang], link=Link.INPUT)
 	job_apply_valid[lang].uses(file_apply_valid[lang], link=Link.OUTPUT, transfer=True, register=True)
 	
-	job_apply_valid[lang].addArguments("applybpe", file_apply_valid[lang].name, file_valid[lang].name, bpe_codes.name, lang_vocab[i])
+	job_apply_valid[lang].addArguments("applybpe", file_apply_valid[lang].name, file_valid[lang].name, bpe_codes.name, lang_vocab[i].name)
 
 	dag.addJob(job_apply_valid[lang])
 	dag.addDependency(Dependency(parent=fast_bpe, child=job_apply_valid[lang]))
@@ -448,7 +448,7 @@ for lang in LANGS:
 	job_apply_test[lang].uses(file_test[lang], link=Link.INPUT)
 	job_apply_test[lang].uses(file_apply_test[lang], link=Link.OUTPUT, transfer=True, register=True)
 	
-	job_apply_test[lang].addArguments("applybpe", file_apply_test[lang].name, file_test[lang].name, bpe_codes.name, lang_vocab[i])
+	job_apply_test[lang].addArguments("applybpe", file_apply_test[lang].name, file_test[lang].name, bpe_codes.name, lang_vocab[i].name)
 
 	dag.addJob(job_apply_test[lang])
 	dag.addDependency(Dependency(parent=fast_bpe, child=job_apply_test[lang]))
