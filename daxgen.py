@@ -156,40 +156,40 @@ exe_concat_bpe.addPFN(PFN("file://"+PWD+"/bin/concat-bpe.sh", site="condorpool")
 exe_concat_bpe.addProfile(Profile(Namespace.CONDOR, "request_memory", "10G")); # in MB
 dag.addExecutable(exe_concat_bpe)
 
-wget = []
-unzip = []
-dataset = []
-concat = []
-tokenize = []
-src_tok = []
-lang_tok = []
+wget = {}
+unzip = {}
+dataset = {}
+concat = {}
+tokenize = {}
+src_tok = {}
+lang_tok = {}
 
 files_already_there = [os.path.basename(x) for x in glob.glob(MONO_PATH+"/*")]
 
-for lang in range(len(LANGS)):
-	wget.append([])
-	unzip.append([])
-	dataset.append([])
+for lang in LANGS:
+	wget[lang] = {}
+	unzip[lang] = {}
+	dataset[lang] = {}
 
-	for year in range(len(YEARS)):
-		current_input = File("news.{1}.{2}.shuffled.gz".format(BASE_URL, YEARS[year], LANGS[lang]))
+	for year in YEARS:
+		current_input = File("news.{1}.{2}.shuffled.gz".format(BASE_URL, year, lang))
 
 		#If the data set is already there
 		if current_input.name not in files_already_there:
 			LOGGER.info("{} will be downloaded from {}..".format(current_input.name, BASE_URL))
-			wget[lang].append(Job("wget"))
+			wget[lang][year] = Job("wget")
 			wget[lang][year].addArguments("-c", "{0}/{1}".format(BASE_URL, current_input.name))
 			wget[lang][year].uses(current_input, link=Link.OUTPUT, transfer=False, register=False)
 			dag.addJob(wget[lang][year])
 		else:
 			LOGGER.info("{0} found in {1}".format(current_input.name, MONO_PATH))
 
-		dataset[lang].append(File(current_input.name[:-3]))
+		dataset[lang][year] = File(current_input.name[:-3])
 
 		# if the data set is already unzipped
 		if dataset[lang][year].name not in files_already_there:
 			# gunzip
-			unzip[lang].append(Job("gzip"))
+			unzip[lang][year] = Job("gzip")
 
 			unzip[lang][year].uses(current_input, link=Link.INPUT)
 			unzip[lang][year].uses(dataset[lang][year], link=Link.OUTPUT, transfer=False, register=False)
@@ -205,26 +205,24 @@ for lang in range(len(LANGS)):
 
 	## Concatenate data for each language
 
-	concat.append(Job("concat"))
-	lang_raw = File("all.{0}".format(LANGS[lang]))
-	concat[lang].addArguments("-m", str(N_MONO), "-o", lang_raw.name, " ".join([x.name for x in dataset[lang]]))
+	concat[lang] = Job("concat")
+	lang_raw = File("all.{0}".format(lang))
+	concat[lang].addArguments("-m", str(N_MONO), "-o", lang_raw.name, " ".join([v.name for u,v in dataset[lang].items()]))
 
 	concat[lang].uses(lang_raw, link=Link.OUTPUT, transfer=True, register=True)
 	
 	dag.addJob(concat[lang])
 
-	for year in range(len(YEARS)):
+	for year in YEARS:
 		concat[lang].uses(dataset[lang][year], link=Link.INPUT)
 		dag.addDependency(Dependency(parent=unzip[lang][year], child=concat[lang]))
 
-	LOGGER.info("{0} monolingual data concatenated in: {1}".format(LANGS[lang], lang_raw.name))
+	LOGGER.info("{0} monolingual data concatenated in: {1}".format(lang, lang_raw.name))
 
 	## Tokenize each language
-
-
-	tokenize.append(Job("tokenize"))
-	lang_tok.append(File("{0}.tok".format(lang_raw.name)))
-	tokenize[lang].addArguments("-i", lang_raw.name, "-l", LANGS[lang], "-p", str(N_THREADS), "-o", lang_tok[lang].name)
+	tokenize[lang] = Job("tokenize")
+	lang_tok[lang] = File("{0}.tok".format(lang_raw.name))
+	tokenize[lang].addArguments("-i", lang_raw.name, "-l", lang, "-p", str(N_THREADS), "-o", lang_tok[lang].name)
 
 	tokenize[lang].uses(lang_raw, link=Link.INPUT)
 	tokenize[lang].uses(lang_tok[lang], link=Link.OUTPUT, transfer=True, register=True)
@@ -232,16 +230,16 @@ for lang in range(len(LANGS)):
 	dag.addJob(tokenize[lang])
 	dag.addDependency(Dependency(parent=concat[lang], child=tokenize[lang]))
 
-	LOGGER.info("{0} monolingual data tokenized in: {1}".format(LANGS[lang], lang_tok[lang].name))
+	LOGGER.info("{0} monolingual data tokenized in: {1}".format(lang, lang_tok[lang].name))
 
 ## learn BPE codes
 fast_bpe = Job("learnbpe")
-fast_bpe.addArguments("learnbpe", str(CODES), " ".join([x.name for x in lang_tok]))
+fast_bpe.addArguments("learnbpe", str(CODES), " ".join([v.name for u,v in lang_tok.items()]))
 bpe_codes = File("bpe_codes")
 fast_bpe.setStdout(bpe_codes)
 dag.addJob(fast_bpe)
 
-for lang in range(len(LANGS)):
+for lang in LANGS:
 	fast_bpe.uses(lang_tok[lang], link=Link.INPUT)
 	dag.addDependency(Dependency(parent=tokenize[lang], child=fast_bpe))
 
@@ -249,17 +247,16 @@ fast_bpe.uses(bpe_codes, link=Link.OUTPUT, transfer=True, register=True)
 
 LOGGER.info("Learning BPE codes")
 
-apply_bpe = []
-tok_codes = []
+apply_bpe = {}
+tok_codes = {}
+extract_vocab = {}
+lang_vocab = {}
 
-extract_vocab = []
-lang_vocab = []
-
-for lang in range(len(LANGS)):
+for lang in LANGS:
 	## Apply BPE codes
-	apply_bpe.append(Job("applybpe"))
+	apply_bpe[lang] = Job("applybpe")
 	
-	tok_codes.append(File("{0}.{1}".format(lang_tok[lang].name, str(CODES))))
+	tok_codes[lang] = File("{0}.{1}".format(lang_tok[lang].name, str(CODES)))
 	apply_bpe[lang].uses(bpe_codes, link=Link.INPUT)
 	apply_bpe[lang].uses(lang_tok[lang], link=Link.INPUT)
 	apply_bpe[lang].uses(tok_codes[lang], link=Link.OUTPUT, transfer=True, register=True)
@@ -269,13 +266,13 @@ for lang in range(len(LANGS)):
 	dag.addJob(apply_bpe[lang])
 	dag.addDependency(Dependency(parent=fast_bpe, child=apply_bpe[lang]))
 
-	LOGGER.info("BPE codes applied to {0} in: {1}".format(LANGS[lang], tok_codes[lang].name))
+	LOGGER.info("BPE codes applied to {0} in: {1}".format(lang, tok_codes[lang].name))
 
 	## Extract vocabulary for each language
-	extract_vocab.append(Job("getvocab"))
-	extract_vocab[lang].addArguments("getvocab", tok_codes[lang].name)
-	lang_vocab.append(File("vocab.{0}.{1}".format(LANGS[lang], str(CODES))))
+	extract_vocab[lang] = Job("getvocab")
+	lang_vocab[lang] = File("vocab.{0}.{1}".format(lang, str(CODES)))
 
+	extract_vocab[lang].addArguments("getvocab", tok_codes[lang].name)
 	extract_vocab[lang].uses(tok_codes[lang], link=Link.INPUT)
 	extract_vocab[lang].uses(lang_vocab[lang], link=Link.OUTPUT, transfer=True, register=True)
 	extract_vocab[lang].setStdout(lang_vocab[lang])
@@ -283,17 +280,16 @@ for lang in range(len(LANGS)):
 	dag.addJob(extract_vocab[lang])
 	dag.addDependency(Dependency(parent=apply_bpe[lang], child=extract_vocab[lang]))
 
-	LOGGER.info("{0} vocab in: {1}".format(LANGS[lang], lang_vocab[lang].name))
-
+	LOGGER.info("{0} vocab in: {1}".format(lang, lang_vocab[lang].name))
 
 ## Extract vocabulary for all languages
 extract_vocab_all = Job("getvocab")
-extract_vocab_all.addArguments("getvocab", " ".join([x.name for x in tok_codes]))
+extract_vocab_all.addArguments("getvocab", " ".join([v.name for u,v in tok_codes.items()]))
 lang_vocab_all = File("vocab.{0}.{1}".format("-".join([x for x in LANGS]), str(CODES)))
 dag.addJob(extract_vocab_all)
 extract_vocab_all.setStdout(lang_vocab_all)
 
-for lang in range(len(LANGS)):
+for lang in LANGS:
 	extract_vocab_all.uses(tok_codes[lang], link=Link.INPUT)
 	dag.addDependency(Dependency(parent=apply_bpe[lang], child=extract_vocab_all))
 
@@ -303,15 +299,14 @@ LOGGER.info("Full vocab in: {0}".format(lang_vocab_all.name))
 
 
 ## Binarize data
-binarize = []
-lang_binarized = []
+binarize = {}
+lang_binarized = {}
 
-for lang in range(len(LANGS)):
-	binarize.append(Job("binarize"))
+for lang in LANGS:
+	binarize[lang] = Job("binarize")
 	binarize[lang].addArguments(lang_vocab_all.name, tok_codes[lang].name)
-	dag.addJob(binarize[lang])
 
-	lang_binarized.append(File("{0}.pth".format(tok_codes[lang].name)))
+	lang_binarized[lang] = File("{0}.pth".format(tok_codes[lang].name))
 
 	binarize[lang].uses(lang_vocab_all, link=Link.INPUT)
 	binarize[lang].uses(tok_codes[lang], link=Link.INPUT)
@@ -319,31 +314,15 @@ for lang in range(len(LANGS)):
 	binarize[lang].uses(lang_binarized[lang], link=Link.OUTPUT, transfer=True, register=True)
 	#binarize[lang].setStdout(lang_binarized[lang])
 
+	dag.addJob(binarize[lang])
 	dag.addDependency(Dependency(parent=extract_vocab_all, child=binarize[lang]))
 	dag.addDependency(Dependency(parent=apply_bpe[lang], child=binarize[lang]))
 
-	LOGGER.info("{0} binarized data in: {1}".format(LANGS[lang], lang_binarized[lang].name))
-
+	LOGGER.info("{0} binarized data in: {1}".format(lang, lang_binarized[lang].name))
 
 ###########################################################################
 ################### parallel data (for evaluation only) ###################
 ###########################################################################
-
-# echo "Extracting parallel data..."
-# tar -xzf dev.tgz
-
-# if TEST:
-# 	extract_test_data = Job("gunzip")
-# 	test_data_file = File(TEST_DATA[:-3])
-# 	extract_test_data.uses(TEST_DATA, link=Link.INPUT)
-# 	extract_test_data.uses(test_data_file, link=Link.OUTPUT, transfer=True, register=True)
-# 	dag.addJob(extract_test_data)
-
-# # SRC_VALID=input/data/para/dev/newstest2013-ref.en
-# # TGT_VALID=input/data/para/dev/newstest2013-ref.fr
-# # SRC_TEST=input/data/para/dev/newstest2014-fren-src.en
-# # TGT_TEST=input/data/para/dev/newstest2014-fren-src.fr
-
 
 input_dev = File(TEST_DATA)
 # data_dev = File(input_dev.name.split('.')[0]) #Remove extension
@@ -358,19 +337,6 @@ input_dev = File(TEST_DATA)
 # LOGGER.info("Parallel test data {0} unzipped in: {1}".format(input_dev.name, data_dev.name))
 
 ## Tokenizing valid and test data
-
-# SRC_VALID=$PARA_PATH/dev/newstest2013-ref.en
-# TGT_VALID=$PARA_PATH/dev/newstest2013-ref.fr
-# SRC_TEST=$PARA_PATH/dev/newstest2014-fren-src.en
-# TGT_TEST=$PARA_PATH/dev/newstest2014-fren-src.fr
-
-# echo "Tokenizing valid and test data..."
-# $INPUT_FROM_SGM < $SRC_VALID.sgm | $NORM_PUNC -l en | $REM_NON_PRINT_CHAR | $TOKENIZER -l en -no-escape -threads $N_THREADS > $SRC_VALID
-# $INPUT_FROM_SGM < $TGT_VALID.sgm | $NORM_PUNC -l fr | $REM_NON_PRINT_CHAR | $TOKENIZER -l fr -no-escape -threads $N_THREADS > $TGT_VALID
-# $INPUT_FROM_SGM < $SRC_TEST.sgm | $NORM_PUNC -l en | $REM_NON_PRINT_CHAR | $TOKENIZER -l en -no-escape -threads $N_THREADS > $SRC_TEST
-# $INPUT_FROM_SGM < $TGT_TEST.sgm | $NORM_PUNC -l fr | $REM_NON_PRINT_CHAR | $TOKENIZER -l fr -no-escape -threads $N_THREADS > $TGT_TEST
-
-# Tokenizing valid source data
 job_valid = {}
 file_valid = {}
 file_valid_sgm = {}
@@ -421,7 +387,6 @@ file_apply_valid = {}
 job_apply_test = {}
 file_apply_test = {}
 
-i = 0
 for lang in LANGS:
 	## Apply BPE codes for validation
 	job_apply_valid[lang] = Job("applybpe")
@@ -429,14 +394,15 @@ for lang in LANGS:
 	file_apply_valid[lang] = File("{0}.{1}".format(file_valid[lang].name, str(CODES)))
 	job_apply_valid[lang].uses(bpe_codes, link=Link.INPUT)
 	job_apply_valid[lang].uses(file_valid[lang], link=Link.INPUT)
+	job_apply_valid[lang].uses(lang_vocab[lang], link=Link.INPUT)
 	job_apply_valid[lang].uses(file_apply_valid[lang], link=Link.OUTPUT, transfer=True, register=True)
 	
-	job_apply_valid[lang].addArguments("applybpe", file_apply_valid[lang].name, file_valid[lang].name, bpe_codes.name, lang_vocab[i].name)
+	job_apply_valid[lang].addArguments("applybpe", file_apply_valid[lang].name, file_valid[lang].name, bpe_codes.name, lang_vocab[lang].name)
 
 	dag.addJob(job_apply_valid[lang])
 	dag.addDependency(Dependency(parent=fast_bpe, child=job_apply_valid[lang]))
 	dag.addDependency(Dependency(parent=job_valid[lang], child=job_apply_valid[lang]))
-	dag.addDependency(Dependency(parent=extract_vocab[i], child=job_apply_valid[lang]))
+	dag.addDependency(Dependency(parent=extract_vocab[lang], child=job_apply_valid[lang]))
 
 	LOGGER.info("BPE codes for validation applied to {0} in: {1}".format(lang, file_apply_valid[lang].name))
 
@@ -446,30 +412,20 @@ for lang in LANGS:
 	file_apply_test[lang] = File("{0}.{1}".format(file_test[lang].name, str(CODES)))
 	job_apply_test[lang].uses(bpe_codes, link=Link.INPUT)
 	job_apply_test[lang].uses(file_test[lang], link=Link.INPUT)
+	job_apply_test[lang].uses(lang_vocab[lang], link=Link.INPUT)
 	job_apply_test[lang].uses(file_apply_test[lang], link=Link.OUTPUT, transfer=True, register=True)
 	
-	job_apply_test[lang].addArguments("applybpe", file_apply_test[lang].name, file_test[lang].name, bpe_codes.name, lang_vocab[i].name)
+	job_apply_test[lang].addArguments("applybpe", file_apply_test[lang].name, file_test[lang].name, bpe_codes.name, lang_vocab[lang].name)
 
 	dag.addJob(job_apply_test[lang])
 	dag.addDependency(Dependency(parent=fast_bpe, child=job_apply_test[lang]))
 	dag.addDependency(Dependency(parent=job_test[lang], child=job_apply_test[lang]))
-	dag.addDependency(Dependency(parent=extract_vocab[i], child=job_apply_test[lang]))
+	dag.addDependency(Dependency(parent=extract_vocab[lang], child=job_apply_test[lang]))
 
 	LOGGER.info("BPE codes for test applied to {0} in: {1}".format(lang, file_apply_test[lang].name))
-	
-	## TODO: fix this by using dict for job/files indexation instead of list below
-	i = i + 1
 
 
 ## Binarizing data
-
-# rm -f $SRC_VALID.$CODES.pth $TGT_VALID.$CODES.pth $SRC_TEST.$CODES.pth $TGT_TEST.$CODES.pth
-# $UMT_PATH/preprocess.py $FULL_VOCAB $SRC_VALID.$CODES
-# $UMT_PATH/preprocess.py $FULL_VOCAB $TGT_VALID.$CODES
-# $UMT_PATH/preprocess.py $FULL_VOCAB $SRC_TEST.$CODES
-# $UMT_PATH/preprocess.py $FULL_VOCAB $TGT_TEST.$CODES
-
-
 job_binarize_valid = {}
 file_binarize_valid = {}
 job_binarize_test = {}
@@ -508,7 +464,7 @@ for lang in LANGS:
 
 	LOGGER.info("{0} binarized test data in: {1}".format(lang, file_binarize_test[lang].name))
 
-# Need to replace en or fr by XX for some reasons
+# Need to replace en and fr by XX for some reasons
 # the training script takes a XX and probably replaces it by en and fr internally
 corrected_valid = file_binarize_valid[LANGS[0]].name.replace('.'+LANGS[0]+'.', ".XX.")
 corrected_test = file_binarize_test[LANGS[0]].name.replace('.'+LANGS[0]+'.', ".XX.")
@@ -523,12 +479,12 @@ LOGGER.info("\t\t test       => {0}".format(corrected_test))
 ## Concatenating source and target monolingual data
 concat_bpe = Job("concat-bpe")
 lang_bpe_all = File("all.{0}.{1}".format("-".join([x for x in LANGS]), str(CODES)))
-concat_bpe.addArguments("-o", lang_bpe_all.name, " ".join([x.name for x in tok_codes]))
+concat_bpe.addArguments("-o", lang_bpe_all.name, " ".join([v.name for u,v in tok_codes.items()]))
 
 concat_bpe.uses(lang_bpe_all, link=Link.OUTPUT, transfer=True, register=True)
 dag.addJob(concat_bpe)
 
-for lang in range(len(LANGS)):
+for lang in LANGS:
 	concat_bpe.uses(tok_codes[lang], link=Link.INPUT)
 	dag.addDependency(Dependency(parent=apply_bpe[lang], child=concat_bpe))
 
@@ -555,12 +511,11 @@ dag.addDependency(Dependency(parent=concat_bpe, child=fasttext))
 
 LOGGER.info("Cross-lingual embeddings in: {0}".format(bpe_vec.name))
 
-
 ###########################################################################
 ################################ Training #################################
 ###########################################################################
 
-MONO_DATASET = "'{0}:{1},,;{2}:{3},,'".format(LANGS[0], lang_binarized[0].name, LANGS[1], lang_binarized[1].name) 
+MONO_DATASET = "'{0}:{1},,;{2}:{3},,'".format(LANGS[0], lang_binarized[LANGS[0]].name, LANGS[1], lang_binarized[LANGS[1]].name) 
 # PARA_DATASET = "'{0}:,./data/para/dev/newstest2013-ref.XX.60000.pth,./data/para/dev/newstest2014-fren-src.XX.60000.pth'"
 PARA_DATASET = "'{0}:,{1},{2}'".format('-'.join(LANGS), corrected_valid, corrected_test)
 # Pretrained model produced by fasttext task
@@ -614,13 +569,12 @@ dag.addJob(training)
 training.uses(bpe_vec.name, link=Link.INPUT)
 dag.addDependency(Dependency(parent=fasttext, child=training))
 
-for lang in range(len(LANGS)):
-	training.uses(lang_binarized[lang], link=Link.INPUT)
-	dag.addDependency(Dependency(parent=binarize[lang], child=training))
-
 for lang in LANGS:
+	training.uses(lang_binarized[lang], link=Link.INPUT)
 	training.uses(file_binarize_valid[lang], link=Link.INPUT)
-	training.uses(file_binarize_test[lang], link=Link.INPUT)	
+	training.uses(file_binarize_test[lang], link=Link.INPUT)
+
+	dag.addDependency(Dependency(parent=binarize[lang], child=training))	
 	dag.addDependency(Dependency(parent=job_binarize_valid[lang], child=training))
 	dag.addDependency(Dependency(parent=job_binarize_test[lang], child=training))
 
@@ -633,20 +587,6 @@ LOGGER.info("Model trained => {0}".format(training_out.name))
 ###########################################################################
 #############################  End Training ###############################
 ###########################################################################
-
-
-# parser = argparse.ArgumentParser(description="fb-nlp-nmt")
-# parser.add_argument("-i", "--input", type=str, nargs="+", help="Input files (if none, datasets will be downloaded)", required=False)
-# parser.add_argument("-y", "--years", type=str, nargs="+", help="Years to consider", required=True)
-# parser.add_argument("-l", "--langs", type=str, nargs="+", help="Langs to consider (two maximum)", required=True)
-# parser.add_argument("-o", "--outdir", type=str, help="Where to output files", required=True)
-
-# parser.add_argument("-t", "--threads", type=int, default=4, help="Number of threads for the training", required=True)
-# parser.add_argument("-e", "--epochs", type=int, default=10, help="Number of epochs for the training", required=True)
-# parser.add_argument("-m", "--mono", default=10000000, type=int, help="Number of monolingual sentences for each language", required=True)
-# parser.add_argument("-b", "--bpe", default=60000, type=int, help="Number of BPE codes", required=True)
-
-# args = parser.parse_args()
 
 # Write the DAX to stdout
 LOGGER.info("Writing {}".format(daxfile))
