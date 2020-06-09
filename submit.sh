@@ -28,8 +28,8 @@ pegasus-plan --conf pegasus.properties \
 	--input-dir $DIR/input/para \
     --output-dir $DIR/output \
     --cleanup leaf \
-    --force \
     --sites condorpool \
     --output-site local \
     -v \
-    --submit
+    #--submit \
+	#--force

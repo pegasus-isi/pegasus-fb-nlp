@@ -235,7 +235,7 @@ for lang in LANGS:
 ## learn BPE codes
 fast_bpe = Job("learnbpe")
 fast_bpe.addArguments("learnbpe", str(CODES), " ".join([v.name for u,v in lang_tok.items()]))
-bpe_codes = File("bpe_codes")
+bpe_codes = File("bpe.codes")
 fast_bpe.setStdout(bpe_codes)
 dag.addJob(fast_bpe)
 
