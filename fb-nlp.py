@@ -46,7 +46,7 @@ BASE_URL                = "http://www.statmt.org/wmt14/training-monolingual-news
 
 N_MONO                  = 10000000          # number of monolingual sentences for each language
 CODES                   = 60000             # number of BPE codes
-N_THREADS               = 16                # number of threads in data preprocessing
+N_THREADS               = 1	                # number of threads in data preprocessing
 N_EPOCHS                = 1                 # number of fastText epochs
 
 ########################## END PRETRAINING #######################
@@ -220,7 +220,7 @@ exe_tokenize = Transformation(
                 is_stageable=False,
                 container=fb_nlp
             )
-exe_tokenize.add_condor_profile(request_cpus="8")
+exe_tokenize.add_condor_profile(request_cpus=N_THREADS)
 exe_tokenize.add_condor_profile(request_memory="10 GB")
 
 
@@ -231,7 +231,7 @@ exe_tokenize_valid = Transformation(
                 is_stageable=False,
                 container=fb_nlp
             )
-exe_tokenize_valid.add_condor_profile(request_cpus="8")
+exe_tokenize_valid.add_condor_profile(request_cpus=N_THREADS)
 exe_tokenize_valid.add_condor_profile(request_memory="10 GB")
 
 
@@ -260,7 +260,7 @@ exe_fasttext = Transformation(
                 is_stageable=False,
                 container=fb_nlp
             )
-exe_fasttext.add_condor_profile(request_cpus="8")
+exe_fasttext.add_condor_profile(request_cpus=N_THREADS)
 exe_fasttext.add_condor_profile(request_memory="10 GB")
 
 exe_training = Transformation(
@@ -270,7 +270,7 @@ exe_training = Transformation(
                 is_stageable=False,
                 container=fb_nlp
             )
-exe_training.add_condor_profile(request_cpus="8")
+exe_training.add_condor_profile(request_cpus=N_THREADS)
 exe_training.add_condor_profile(request_memory="10 GB")
 
 # TODO: stage sh directly into container
@@ -379,7 +379,7 @@ for lang in LANGS:
         concat[lang].add_inputs(dataset[lang][year])
 
     concat[lang].add_outputs(lang_raw)
-    concat[lang].add_args("-m", str(N_MONO), "-o", lang_raw, [v for u,v in dataset[lang].items()])
+    concat[lang].add_args("-m", str(N_MONO), "-o", lang_raw, *[v for u,v in dataset[lang].items()])
 
     wf.add_jobs(concat[lang])
     LOGGER.info("{0} monolingual data concatenated in: {1}".format(lang, lang_raw))
@@ -403,7 +403,9 @@ for lang in LANGS:
     fast_bpe.add_inputs(lang_tok[lang])
 
 fast_bpe.set_stdout(bpe_codes)
-fast_bpe.add_args("learnbpe", str(CODES), [v for u,v in lang_tok.items()])
+fast_bpe.add_args("learnbpe", str(CODES), *[v for u,v in lang_tok.items()])
+
+#print([v.lfn for u,v in lang_tok.items()])
 
 wf.add_jobs(fast_bpe)
 
@@ -446,7 +448,7 @@ for lang in LANGS:
     extract_vocab_all.add_inputs(tok_codes[lang])
 
 extract_vocab_all.set_stdout(lang_vocab_all)
-extract_vocab_all.add_args("getvocab", [v for u,v in tok_codes.items()])
+extract_vocab_all.add_args("getvocab", *[v for u,v in tok_codes.items()])
 
 wf.add_jobs(extract_vocab_all)
 LOGGER.info("Full vocab in: {0}".format(lang_vocab_all))
@@ -587,7 +589,7 @@ for lang in LANGS:
     concat_bpe.add_inputs(tok_codes[lang])
 
 concat_bpe.add_outputs(lang_bpe_all)
-concat_bpe.add_args("-o", lang_bpe_all, [v for u,v in tok_codes.items()])
+concat_bpe.add_args("-o", lang_bpe_all, *[v for u,v in tok_codes.items()])
 
 wf.add_jobs(concat_bpe)
 LOGGER.info("Concatenated shuffled data in used by the pre-training task fasttext: {0}".format(lang_bpe_all))
