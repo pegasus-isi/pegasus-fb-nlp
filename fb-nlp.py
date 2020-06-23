@@ -704,6 +704,12 @@ if __name__ == '__main__':
 
 	args = parser.parse_args()
 
+	if args.training:
+		LOGGER.info("Training ACTIVATED.")
+		LOGGER.info("This workflow uses {0} threads for: \"tokenize\", \"tokenize-validation\", \"fasttext\" and \"training\" tasks.".format(args.cores))
+	else:
+		LOGGER.info("This workflow uses {0} threads for: \"tokenize\", \"tokenize-validation\" and \"fasttext\" tasks.".format(args.cores))
+
 	wf = WorkflowNLP(RUN_ID, threads=str(args.cores), logger=LOGGER)
 	wf.set_properties()
 	wf.set_sites()
