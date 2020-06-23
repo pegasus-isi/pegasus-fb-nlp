@@ -67,8 +67,8 @@ SHARE_OUTPUT_EMB		= True				# share projection output layers
 ## denoising auto-encoder parameters
 MONO_DIRECTIONS			= ','.join(LANGS)	# train the auto-encoder on English and French
 WORD_SHUFFLE			= 3					# shuffle words
-WORD_DROPOUT			= 0.1 				# randomly remove words
-WORD_BLANK				= 0.2 				# randomly blank out words
+WORD_DROPOUT			= 0.1				# randomly remove words
+WORD_BLANK				= 0.2				# randomly blank out words
 
 ## back-translation directions (e.g., en->fr->en and fr->en->fr)
 PIVO_DIRECTIONS			= '{0}-{1}-{0},{1}-{0}-{1}'.format(LANGS[0], LANGS[1])
@@ -118,6 +118,7 @@ class WorkflowNLP():
 		self.replica_catalog = ReplicaCatalog()
 		self.workflow = Workflow(name, infer_dependencies=True)
 		self.logger = logger
+		self.threads = threads
 		
 		self.input_dev = File(TEST_DATA)
 
@@ -219,7 +220,7 @@ class WorkflowNLP():
 						is_stageable=False,
 						container=fb_nlp
 					)
-		exe_tokenize.add_condor_profile(request_cpus=N_THREADS)
+		exe_tokenize.add_condor_profile(request_cpus=self.threads)
 		exe_tokenize.add_condor_profile(request_memory="10 GB")
 
 
@@ -230,7 +231,7 @@ class WorkflowNLP():
 						is_stageable=False,
 						container=fb_nlp
 					)
-		exe_tokenize_valid.add_condor_profile(request_cpus=N_THREADS)
+		exe_tokenize_valid.add_condor_profile(request_cpus=self.threads)
 		exe_tokenize_valid.add_condor_profile(request_memory="10 GB")
 
 
@@ -259,7 +260,7 @@ class WorkflowNLP():
 						is_stageable=False,
 						container=fb_nlp
 					)
-		exe_fasttext.add_condor_profile(request_cpus=N_THREADS)
+		exe_fasttext.add_condor_profile(request_cpus=self.threads)
 		exe_fasttext.add_condor_profile(request_memory="10 GB")
 
 		exe_training = Transformation(
@@ -269,7 +270,7 @@ class WorkflowNLP():
 						is_stageable=False,
 						container=fb_nlp
 					)
-		exe_training.add_condor_profile(request_cpus=N_THREADS)
+		exe_training.add_condor_profile(request_cpus=self.threads)
 		exe_training.add_condor_profile(request_memory="10 GB")
 
 		# TODO: stage sh directly into container
@@ -389,7 +390,7 @@ class WorkflowNLP():
 
 			tokenize[lang].add_inputs(lang_raw)
 			tokenize[lang].add_outputs(lang_tok[lang])
-			tokenize[lang].add_args("-i", lang_raw, "-l", lang, "-p", str(N_THREADS), "-o", lang_tok[lang])
+			tokenize[lang].add_args("-i", lang_raw, "-l", lang, "-p", str(self.threads), "-o", lang_tok[lang])
 
 			self.workflow.add_jobs(tokenize[lang])
 			self.logger.info("{0} monolingual data tokenized in: {1}".format(lang, lang_tok[lang]))
@@ -486,7 +487,7 @@ class WorkflowNLP():
 
 				job_valid[lang].add_inputs(self.input_dev) # the dev.tgz containing data for validations
 				job_valid[lang].add_outputs(file_valid[lang])
-				job_valid[lang].add_args("-i", file_valid_sgm[lang], "-l", lang, "-p", str(N_THREADS), "-o", file_valid[lang])
+				job_valid[lang].add_args("-i", file_valid_sgm[lang], "-l", lang, "-p", str(self.threads), "-o", file_valid[lang])
 
 				self.workflow.add_jobs(job_valid[lang])
 
@@ -499,7 +500,7 @@ class WorkflowNLP():
 
 				job_test[lang].add_inputs(self.input_dev)
 				job_test[lang].add_outputs(file_test[lang])
-				job_test[lang].add_args("-i", file_test_sgm[lang], "-l", lang, "-p", str(N_THREADS), "-o", file_test[lang])
+				job_test[lang].add_args("-i", file_test_sgm[lang], "-l", lang, "-p", str(self.threads), "-o", file_test[lang])
 
 				self.workflow.add_jobs(job_test[lang])
 
@@ -601,7 +602,7 @@ class WorkflowNLP():
 			"-epoch", str(N_EPOCHS), 
 			"-minCount", "0", 
 			"-dim", "512", 
-			"-thread", str(N_THREADS), 
+			"-thread", str(self.threads), 
 			"-ws", "5", 
 			"-neg", "10", 
 			"-input", lang_bpe_all, 
