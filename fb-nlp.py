@@ -109,7 +109,7 @@ except FileExistsError:
 	pass
 
 class WorkflowNLP():
-	def __init__(self, name, threads=1, logger=None):
+	def __init__(self, name, threads=1, training=False, logger=None):
 		self.properties = Properties()
 		self.site_catalog = SiteCatalog()
 		self.transformation_catalog = TransformationCatalog()
@@ -117,6 +117,7 @@ class WorkflowNLP():
 		self.workflow = Workflow(name, infer_dependencies=True)
 		self.logger = logger
 		self.threads = threads
+		self.training = training
 		
 		self.input_dev = File(TEST_DATA)
 
@@ -130,6 +131,13 @@ class WorkflowNLP():
 		)
 		ch.setFormatter(formatter)
 		self.logger.addHandler(ch)
+
+		if self.training:
+			self.logger.info("Training ACTIVATED.")
+			self.logger.info("This workflow uses {0} threads for: \"tokenize\", \"tokenize-validation\", \"fasttext\" and \"training\" tasks.".format(self.threads))
+		else:
+			self.logger.info("This workflow uses {0} threads for: \"tokenize\", \"tokenize-validation\" and \"fasttext\" tasks.".format(self.threads))
+
 
 
 	def set_properties(self):
@@ -316,7 +324,7 @@ class WorkflowNLP():
 		self.logger.info("Creating replica catalog")
 
 
-	def set_jobs(self, training=False):
+	def set_jobs(self):
 		# --- Workflow -----------------------------------------------------------------
 		# Set infer_dependencies=True so that they are inferred based on job
 		# input and output file usage.
@@ -611,7 +619,7 @@ class WorkflowNLP():
 		self.workflow.add_jobs(fasttext)
 		self.logger.info("Cross-lingual embeddings (pre-training results) in: {0}".format(bpe_vec))
 
-		if training:
+		if self.training:
 			###########################################################################
 			################################ Training #################################
 			###########################################################################
@@ -704,19 +712,13 @@ if __name__ == '__main__':
 
 	args = parser.parse_args()
 
-	if args.training:
-		LOGGER.info("Training ACTIVATED.")
-		LOGGER.info("This workflow uses {0} threads for: \"tokenize\", \"tokenize-validation\", \"fasttext\" and \"training\" tasks.".format(args.cores))
-	else:
-		LOGGER.info("This workflow uses {0} threads for: \"tokenize\", \"tokenize-validation\" and \"fasttext\" tasks.".format(args.cores))
-
-	wf = WorkflowNLP(RUN_ID, threads=str(args.cores), logger=LOGGER)
+	wf = WorkflowNLP(RUN_ID, threads=str(args.cores), training=args.training, logger=LOGGER)
 	wf.set_properties()
 	wf.set_sites()
 	wf.set_transformations()
 	wf.set_replicas()
 	# To activate the training task set  training=True (REQUIRED GPU+CUDA)
-	wf.set_jobs(training=args.training)
+	wf.set_jobs()
 
-	wf.run()
+	wf.run(submit=False)
 
