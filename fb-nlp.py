@@ -15,85 +15,85 @@ from pathlib import Path
 from Pegasus.api import *
 
 # --- Work Directory Setup -----------------------------------------------------
-RUN_ID = "fb-nlp-" + datetime.now().strftime("%s")
-TOP_DIR = Path.cwd()
-WORK_DIR = TOP_DIR / "work"
+RUN_ID					= "fb-nlp-" + datetime.now().strftime("%s")
+TOP_DIR					= Path.cwd()
+WORK_DIR				= TOP_DIR / "work"
 
 ######################## WORKFLOW PARAMETER ########################
 
-WF_ID                   = "fb-nlp-nmt"
-DATA_PATH               = "input/"
-CONTAINER               = "fb-nlp"
+WF_ID					= "fb-nlp-nmt"
+DATA_PATH				= "input/"
+CONTAINER				= "fb-nlp"
 
 ########################### END WORKFLOW ###########################
 
 ######################## PREPROCESS PARAMETER ######################
 
-MONO_PATH               = TOP_DIR / DATA_PATH / "mono"
-PARA_PATH               = TOP_DIR / DATA_PATH / "para"
-TEST_DATA               = "dev.tgz"
+MONO_PATH				= TOP_DIR / DATA_PATH / "mono"
+PARA_PATH				= TOP_DIR / DATA_PATH / "para"
+TEST_DATA				= "dev.tgz"
 
-### CAUTION: LANGS      = [src, target]
-LANGS                   = ['en', 'fr']
-YEARS                   = [2007, 2008]
+### CAUTION ORDER: LANGS      = [src, target]
+LANGS					= ['en', 'fr']
+YEARS					= [2007, 2008]
 
 # If we need to fetch data from server
-BASE_URL                = "http://www.statmt.org/wmt14/training-monolingual-news-crawl/"
+BASE_URL				= "http://www.statmt.org/wmt14/training-monolingual-news-crawl/"
 
 ########################## END PREPROCESS #########################
 
 ####################### PRETRAINING PARAMETER #####################
 
-N_MONO                  = 10000000          # number of monolingual sentences for each language
-CODES                   = 60000             # number of BPE codes
-N_THREADS               = 1                 # number of threads in data preprocessing
-N_EPOCHS                = 1                 # number of fastText epochs
+N_MONO					= 10000000			# number of monolingual sentences for each language
+CODES					= 60000				# number of BPE codes
+N_THREADS				= 1					# number of threads in data preprocessing
+N_EPOCHS				= 1					# number of fastText epochs
 
 ########################## END PRETRAINING #######################
 
 ######################### TRAINING PARAMETER #####################
 
 ## network architecture
-TRANSFORMER             = True              # use a transformer architecture
-N_ENC_LAYERS            = 4                 # use N layers in the encoder
-N_DEC_LAYERS            = 4                 # use N layers in the decoder
+TRANSFORMER				= True				# use a transformer architecture
+N_ENC_LAYERS			= 4					# use N layers in the encoder
+N_DEC_LAYERS			= 4					# use N layers in the decoder
 
 ## parameters sharing
-SHARE_ENC               = 3                 # share M=3 out of the N encoder layers
-SHARE_DEC               = 3                 # share M=3 out of the N decoder layers
-SHARE_LANG_EMB          = True              # share lookup tables
-SHARE_OUTPUT_EMB        = True              # share projection output layers
+SHARE_ENC				= 3					# share M=3 out of the N encoder layers
+SHARE_DEC				= 3					# share M=3 out of the N decoder layers
+SHARE_LANG_EMB			= True				# share lookup tables
+SHARE_OUTPUT_EMB		= True				# share projection output layers
 
 ## denoising auto-encoder parameters
-MONO_DIRECTIONS         = ','.join(LANGS)   # train the auto-encoder on English and French
-WORD_SHUFFLE            = 3                 # shuffle words
-WORD_DROPOUT            = 0.1               # randomly remove words
-WORD_BLANK              = 0.2               # randomly blank out words
+MONO_DIRECTIONS			= ','.join(LANGS)	# train the auto-encoder on English and French
+WORD_SHUFFLE			= 3					# shuffle words
+WORD_DROPOUT			= 0.1 				# randomly remove words
+WORD_BLANK				= 0.2 				# randomly blank out words
 
 ## back-translation directions (e.g., en->fr->en and fr->en->fr)
-PIVO_DIRECTIONS         = '{0}-{1}-{0},{1}-{0}-{1}'.format(LANGS[0], LANGS[1])
+PIVO_DIRECTIONS			= '{0}-{1}-{0},{1}-{0}-{1}'.format(LANGS[0], LANGS[1])
 
 ## pretrained embeddings
-PRETRAINED_OUT          = True                      # also pretrain output layers
+PRETRAINED_OUT			= True						# also pretrain output layers
 
 ## dynamic loss coefficients
-LAMBDA_XE_MONO          = '0:1,100000:0.1,300000:0' # auto-encoder loss coefficient
-LAMBDA_XE_OTFD          = 1                         # back-translation loss coefficient
+LAMBDA_XE_MONO			= '0:1,100000:0.1,300000:0'	# auto-encoder loss coefficient
+LAMBDA_XE_OTFD			= 1							# back-translation loss coefficient
 
 ## CPU on-the-fly generation
-OTF_NUM_PROCESSES       = 30                        # number of CPU jobs for back-parallel data generation
-OTF_SYNC_PARAMS_EVERY   = 1000                      # CPU parameters synchronization frequency
+OTF_NUM_PROCESSES		= 30						# number of CPU jobs for back-parallel data generation
+OTF_SYNC_PARAMS_EVERY	= 1000						# CPU parameters synchronization frequency
 
 ## optimization
-ENC_OPTIMIZER           = 'adam,lr=0.0001'          # model optimizer
-GROUP_BY_SIZE           = True                      # group sentences by length inside batches
-BATCH_SIZE              = 32                        # batch size
-EPOCH_SIZE              = 500000                    # epoch size
+ENC_OPTIMIZER			= 'adam,lr=0.0001'			# model optimizer
+GROUP_BY_SIZE			= True						# group sentences by length inside batches
+BATCH_SIZE				= 32						# batch size
+EPOCH_SIZE				= 500000					# epoch size
 # stopping criterion
-STOPPING_CRITERION      = 'bleu_{0}_{1}_valid,10'.format(LANGS[0], LANGS[1])
+STOPPING_CRITERION		= 'bleu_{0}_{1}_valid,10'.format(LANGS[0], LANGS[1])
 
-FREEZE_ENC_EMB          = False                     # freeze encoder embeddings
-FREEZE_DEC_EMB          = False                     # freeze decoder embeddings
+FREEZE_ENC_EMB			= False						# freeze encoder embeddings
+FREEZE_DEC_EMB			= False						# freeze decoder embeddings
 
 ########################## END TRAINING ##########################
 
@@ -308,7 +308,7 @@ class WorkflowNLP():
 		# this file is located. We specify that when calling add_replica().
 
 		self.replica_catalog = ReplicaCatalog() \
-				.add_replica("local", ".*\.gz", str(Path(__file__).parent.resolve() / "input/mono/[0]"), regex=True) \
+				.add_regex_replica("local", ".*\.gz", str(Path(__file__).parent.resolve() / "input/mono/[0]")) \
 				.add_replica("local", self.input_dev, str(Path(__file__).parent.resolve() / "input/para/" / self.input_dev.lfn))
 
 		# Again, pegasus-planner will know to look for this file in cwd.
