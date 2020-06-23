@@ -21,7 +21,6 @@ WORK_DIR				= TOP_DIR / "work"
 
 ######################## WORKFLOW PARAMETER ########################
 
-WF_ID					= "fb-nlp-nmt"
 DATA_PATH				= "input/"
 CONTAINER				= "fb-nlp"
 
@@ -46,7 +45,6 @@ BASE_URL				= "http://www.statmt.org/wmt14/training-monolingual-news-crawl/"
 
 N_MONO					= 10000000			# number of monolingual sentences for each language
 CODES					= 60000				# number of BPE codes
-N_THREADS				= 1					# number of threads in data preprocessing
 N_EPOCHS				= 1					# number of fastText epochs
 
 ########################## END PRETRAINING #######################
@@ -194,8 +192,9 @@ class WorkflowNLP():
 		exe_gzip = Transformation(
 						"gzip",
 						site="condorpool",
-						pfn="/usr/bin/gunzip",
+						pfn="/bin/gunzip",
 						is_stageable=False,
+						container=fb_nlp,
 					)
 
 		exe_concat = Transformation(
@@ -641,7 +640,7 @@ class WorkflowNLP():
 
 			training.set_stdout(training_out)
 			training.add_args(
-				'--exp_name', str(WF_ID), 
+				'--exp_name', str(RUN_ID), 
 				'--transformer', str(TRANSFORMER), 
 				'--n_enc_layers', str(N_ENC_LAYERS), 
 				'--n_dec_layers', str(N_DEC_LAYERS), 
@@ -695,13 +694,23 @@ class WorkflowNLP():
 
 
 if __name__ == '__main__':
-	wf = WorkflowNLP("fb-nlp", threads=4, logger=LOGGER)
+
+	parser = argparse.ArgumentParser()
+
+	parser.add_argument("-c", "--cores", type=int, default=1, help="Number of threads")
+
+	parser.add_argument("-t", "--training", action="store_true", 
+		help="Activate training (require NVIDIA GPU)")
+
+	args = parser.parse_args()
+
+	wf = WorkflowNLP(RUN_ID, threads=str(args.cores), logger=LOGGER)
 	wf.set_properties()
 	wf.set_sites()
 	wf.set_transformations()
 	wf.set_replicas()
 	# To activate the training task set  training=True (REQUIRED GPU+CUDA)
-	wf.set_jobs(training=False)
+	wf.set_jobs(training=args.training)
 
 	wf.run()
 

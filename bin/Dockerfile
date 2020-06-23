@@ -4,7 +4,7 @@ FROM ubuntu:18.04
 # Set the working directory to /
 WORKDIR /
 
-RUN apt update && apt install -y --no-install-recommends wget curl python3 python3-pip python3-setuptools git gcc build-essential default-jdk ant
+RUN apt update && apt install -y --no-install-recommends wget gzip curl python3 python3-pip python3-setuptools git gcc build-essential default-jdk ant
 RUN pip3 install --upgrade pip
 RUN ln -fs /usr/bin/python3 /usr/bin/python
 
