@@ -1,5 +1,6 @@
 # Use an official Ubuntu as a parent image
-FROM ubuntu:18.04
+#FROM ubuntu:18.04
+FROM nvcr.io/nvidia/pytorch:18.04-py3
 
 # Set the working directory to /
 WORKDIR /
