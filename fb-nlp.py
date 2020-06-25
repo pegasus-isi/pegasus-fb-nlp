@@ -183,7 +183,7 @@ class WorkflowNLP():
 		fb_nlp = Container(
 							CONTAINER, 
 							Container.DOCKER, 
-							image="docker:///lpottier/fb-nlp:0.1"
+							image="docker:///pegasus/fb-nlp:latest"
 						)
 
 		self.transformation_catalog.add_containers(fb_nlp)
