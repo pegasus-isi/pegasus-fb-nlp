@@ -109,7 +109,7 @@ except FileExistsError:
     pass
 
 class WorkflowNLP():
-    def __init__(self, name, threads=1, is_singularity=False, training=False, logger=None):
+    def __init__(self, name, threads=1, gpus=1, is_singularity=False, training=False, logger=None):
         self.properties = Properties()
         self.site_catalog = SiteCatalog()
         self.transformation_catalog = TransformationCatalog()
@@ -117,6 +117,7 @@ class WorkflowNLP():
         self.workflow = Workflow(name, infer_dependencies=True)
         self.logger = logger
         self.threads = threads
+        self.gpus = gpus
         self.training = training
         self.is_singularity = is_singularity
         
@@ -685,6 +686,8 @@ class WorkflowNLP():
             )
 
 
+            training.add_condor_profile(request_cpus=self.threads)
+            training.add_condor_profile(request_gpus=self.gpus)
             self.workflow.add_jobs(training)
             self.logger.info("Model trained => {0}".format(training_out))
 
@@ -714,12 +717,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-c", "--cores", type=int, default=1, help="Number of threads")
+    parser.add_argument("-g", "--gpus", type=int, default=1, help="Number of gpus")
     parser.add_argument("-s", "--singularity", action="store_true", help="Use singularity containers")
     parser.add_argument("-t", "--training", action="store_true", help="Activate training (require NVIDIA GPU)")
 
     args = parser.parse_args()
     
-    wf = WorkflowNLP(RUN_ID, threads=str(args.cores), is_singularity=args.singularity, training=args.training, logger=LOGGER)
+    wf = WorkflowNLP(RUN_ID, threads=args.cores, gpus=args.gpus, is_singularity=args.singularity, training=args.training, logger=LOGGER)
     wf.set_properties()
     wf.set_sites()
     wf.set_transformations()
