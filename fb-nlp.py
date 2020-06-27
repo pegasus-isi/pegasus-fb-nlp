@@ -165,13 +165,11 @@ class WorkflowNLP():
                         
                         Directory(Directory.LOCAL_STORAGE, local_storage_dir)
                             .add_file_servers(FileServer("file://" + local_storage_dir, Operation.ALL))
-                    ) \
-                    .add_env(PATH="/home/georgpap/.local/bin:/home/georgpap/Software/Pegasus/pegasus-5.0.0dev/bin:/home/georgpap/Software/qemu/bin:/opt/singularity/bin:/usr/local/go/bin:/usr/local/cuda-10.1/bin:/usr/local/cuda-10.1/NsightCompute-2019.1:/home/georgpap/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/georgpap/Software/go/bin")
+                    )
 
         condorpool = Site("condorpool") \
                         .add_pegasus_profile(style="condor") \
-                        .add_condor_profile(universe="vanilla") \
-                        .add_env(PATH="/home/georgpap/.local/bin:/home/georgpap/Software/Pegasus/pegasus-5.0.0dev/bin:/home/georgpap/Software/qemu/bin:/opt/singularity/bin:/usr/local/go/bin:/usr/local/cuda-10.1/bin:/usr/local/cuda-10.1/NsightCompute-2019.1:/home/georgpap/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/georgpap/Software/go/bin")
+                        .add_condor_profile(universe="vanilla") 
 
         self.site_catalog.add_sites(local, condorpool)
 
