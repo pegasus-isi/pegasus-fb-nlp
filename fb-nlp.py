@@ -488,107 +488,107 @@ class WorkflowNLP():
             ################### parallel data (for evaluation only) ###################
             ###########################################################################
 
-            ## Tokenizing valid and test data
-            job_valid = {}
-            file_valid = {}
-            file_valid_sgm = {}
-            job_test = {}
-            file_test = {}
-            file_test_sgm = {}
+        ## Tokenizing valid and test data
+        job_valid = {}
+        file_valid = {}
+        file_valid_sgm = {}
+        job_test = {}
+        file_test = {}
+        file_test_sgm = {}
 
-            for lang in LANGS:
-                job_valid[lang] = Job("tokenize-validation")
+        for lang in LANGS:
+            job_valid[lang] = Job("tokenize-validation")
 
-                file_valid[lang] = File('newstest2013-ref.{0}'.format(lang))
-                file_valid_sgm[lang] = File('{0}.sgm'.format(file_valid[lang]))
+            file_valid[lang] = File('newstest2013-ref.{0}'.format(lang))
+            file_valid_sgm[lang] = File('{0}.sgm'.format(file_valid[lang]))
 
-                job_valid[lang].add_inputs(self.input_dev) # the dev.tgz containing data for validations
-                job_valid[lang].add_outputs(file_valid[lang])
-                job_valid[lang].add_args("-i", file_valid_sgm[lang], "-l", lang, "-p", str(self.threads), "-o", file_valid[lang])
+            job_valid[lang].add_inputs(self.input_dev) # the dev.tgz containing data for validations
+            job_valid[lang].add_outputs(file_valid[lang])
+            job_valid[lang].add_args("-i", file_valid_sgm[lang], "-l", lang, "-p", str(self.threads), "-o", file_valid[lang])
 
-                self.workflow.add_jobs(job_valid[lang])
+            self.workflow.add_jobs(job_valid[lang])
 
-                self.logger.info("Tokenizing valid {0} data {1}".format(lang, file_valid[lang]))
+            self.logger.info("Tokenizing valid {0} data {1}".format(lang, file_valid[lang]))
 
-                # Tokenizing test source data
-                job_test[lang] = Job("tokenize-validation")
-                file_test[lang] = File('newstest2014-{0}-src.{1}'.format(''.join(reversed(LANGS)),lang))
-                file_test_sgm[lang] = File('{0}.sgm'.format(file_test[lang]))
+            # Tokenizing test source data
+            job_test[lang] = Job("tokenize-validation")
+            file_test[lang] = File('newstest2014-{0}-src.{1}'.format(''.join(reversed(LANGS)),lang))
+            file_test_sgm[lang] = File('{0}.sgm'.format(file_test[lang]))
 
-                job_test[lang].add_inputs(self.input_dev)
-                job_test[lang].add_outputs(file_test[lang])
-                job_test[lang].add_args("-i", file_test_sgm[lang], "-l", lang, "-p", str(self.threads), "-o", file_test[lang])
+            job_test[lang].add_inputs(self.input_dev)
+            job_test[lang].add_outputs(file_test[lang])
+            job_test[lang].add_args("-i", file_test_sgm[lang], "-l", lang, "-p", str(self.threads), "-o", file_test[lang])
 
-                self.workflow.add_jobs(job_test[lang])
+            self.workflow.add_jobs(job_test[lang])
 
-                self.logger.info("Tokenizing test {0} data {1}".format(lang, file_test[lang]))
+            self.logger.info("Tokenizing test {0} data {1}".format(lang, file_test[lang]))
 
-            ## Applying BPE to valid and test files
-            job_apply_valid = {}
-            file_apply_valid = {}
-            job_apply_test = {}
-            file_apply_test = {}
+        ## Applying BPE to valid and test files
+        job_apply_valid = {}
+        file_apply_valid = {}
+        job_apply_test = {}
+        file_apply_test = {}
 
-            for lang in LANGS:
-                ## Apply BPE codes for validation
-                job_apply_valid[lang] = Job("bpe")
-                file_apply_valid[lang] = File("{0}.{1}".format(file_valid[lang], str(CODES)))
+        for lang in LANGS:
+            ## Apply BPE codes for validation
+            job_apply_valid[lang] = Job("bpe")
+            file_apply_valid[lang] = File("{0}.{1}".format(file_valid[lang], str(CODES)))
 
-                job_apply_valid[lang].add_inputs(bpe_codes, file_valid[lang], lang_vocab[lang])
-                job_apply_valid[lang].add_outputs(file_apply_valid[lang])
-                
-                job_apply_valid[lang].add_args("applybpe", file_apply_valid[lang], file_valid[lang], bpe_codes, lang_vocab[lang])
+            job_apply_valid[lang].add_inputs(bpe_codes, file_valid[lang], lang_vocab[lang])
+            job_apply_valid[lang].add_outputs(file_apply_valid[lang])
+            
+            job_apply_valid[lang].add_args("applybpe", file_apply_valid[lang], file_valid[lang], bpe_codes, lang_vocab[lang])
 
-                self.workflow.add_jobs(job_apply_valid[lang])
-                self.logger.info("BPE codes for validation applied to {0} in: {1}".format(lang, file_apply_valid[lang]))
+            self.workflow.add_jobs(job_apply_valid[lang])
+            self.logger.info("BPE codes for validation applied to {0} in: {1}".format(lang, file_apply_valid[lang]))
 
-                ## Apply BPE codes for test
-                job_apply_test[lang] = Job("bpe")
-                file_apply_test[lang] = File("{0}.{1}".format(file_test[lang], str(CODES)))
+            ## Apply BPE codes for test
+            job_apply_test[lang] = Job("bpe")
+            file_apply_test[lang] = File("{0}.{1}".format(file_test[lang], str(CODES)))
 
-                job_apply_test[lang].add_inputs(bpe_codes, file_test[lang], lang_vocab[lang])
-                job_apply_test[lang].add_outputs(file_apply_test[lang])
-                job_apply_test[lang].add_args("applybpe", file_apply_test[lang], file_test[lang], bpe_codes, lang_vocab[lang])
+            job_apply_test[lang].add_inputs(bpe_codes, file_test[lang], lang_vocab[lang])
+            job_apply_test[lang].add_outputs(file_apply_test[lang])
+            job_apply_test[lang].add_args("applybpe", file_apply_test[lang], file_test[lang], bpe_codes, lang_vocab[lang])
 
-                self.workflow.add_jobs(job_apply_test[lang])
-                self.logger.info("BPE codes for test applied to {0} in: {1}".format(lang, file_apply_test[lang]))
+            self.workflow.add_jobs(job_apply_test[lang])
+            self.logger.info("BPE codes for test applied to {0} in: {1}".format(lang, file_apply_test[lang]))
 
-            ## Binarizing data
-            job_binarize_valid = {}
-            file_binarize_valid = {}
-            job_binarize_test = {}
-            file_binarize_test = {}
+        ## Binarizing data
+        job_binarize_valid = {}
+        file_binarize_valid = {}
+        job_binarize_test = {}
+        file_binarize_test = {}
 
-            for lang in LANGS:
-                ## Binarize for valid data
-                job_binarize_valid[lang] = Job("binarize")
-                file_binarize_valid[lang] = File("{0}.pth".format(file_apply_valid[lang]))
+        for lang in LANGS:
+            ## Binarize for valid data
+            job_binarize_valid[lang] = Job("binarize")
+            file_binarize_valid[lang] = File("{0}.pth".format(file_apply_valid[lang]))
 
-                job_binarize_valid[lang].add_inputs(lang_vocab_all, file_apply_valid[lang])
-                job_binarize_valid[lang].add_outputs(file_binarize_valid[lang])
-                job_binarize_valid[lang].add_args(lang_vocab_all, file_apply_valid[lang])
+            job_binarize_valid[lang].add_inputs(lang_vocab_all, file_apply_valid[lang])
+            job_binarize_valid[lang].add_outputs(file_binarize_valid[lang])
+            job_binarize_valid[lang].add_args(lang_vocab_all, file_apply_valid[lang])
 
-                self.workflow.add_jobs(job_binarize_valid[lang])
-                self.logger.info("{0} binarized valid data in: {1}".format(lang, file_binarize_valid[lang]))
+            self.workflow.add_jobs(job_binarize_valid[lang])
+            self.logger.info("{0} binarized valid data in: {1}".format(lang, file_binarize_valid[lang]))
 
-                ## Binarize for test data
-                job_binarize_test[lang] = Job("binarize")
-                file_binarize_test[lang] = File("{0}.pth".format(file_apply_test[lang]))
+            ## Binarize for test data
+            job_binarize_test[lang] = Job("binarize")
+            file_binarize_test[lang] = File("{0}.pth".format(file_apply_test[lang]))
 
-                job_binarize_test[lang].add_inputs(lang_vocab_all, file_apply_test[lang])
-                job_binarize_test[lang].add_outputs(file_binarize_test[lang])
-                job_binarize_test[lang].add_args(lang_vocab_all, file_apply_test[lang])
+            job_binarize_test[lang].add_inputs(lang_vocab_all, file_apply_test[lang])
+            job_binarize_test[lang].add_outputs(file_binarize_test[lang])
+            job_binarize_test[lang].add_args(lang_vocab_all, file_apply_test[lang])
 
-                self.workflow.add_jobs(job_binarize_test[lang])
-                self.logger.info("{0} binarized test data in: {1}".format(lang, file_binarize_test[lang]))
+            self.workflow.add_jobs(job_binarize_test[lang])
+            self.logger.info("{0} binarized test data in: {1}".format(lang, file_binarize_test[lang]))
 
-            # the main training task required that we 
-            # replace en and fr by XX for some technical reasons
-            corrected_valid = file_binarize_valid[LANGS[0]].lfn.replace('.'+LANGS[0]+'.', ".XX.")
-            corrected_test = file_binarize_test[LANGS[0]].lfn.replace('.'+LANGS[0]+'.', ".XX.")
-            self.logger.info("Parallel data set files:")
-            self.logger.info("\t\t validation => {0}".format(corrected_valid))
-            self.logger.info("\t\t test       => {0}".format(corrected_test))
+        # the main training task required that we 
+        # replace en and fr by XX for some technical reasons
+        corrected_valid = file_binarize_valid[LANGS[0]].lfn.replace('.'+LANGS[0]+'.', ".XX.")
+        corrected_test = file_binarize_test[LANGS[0]].lfn.replace('.'+LANGS[0]+'.', ".XX.")
+        self.logger.info("Parallel data set files:")
+        self.logger.info("\t\t validation => {0}".format(corrected_valid))
+        self.logger.info("\t\t test       => {0}".format(corrected_test))
 
         ###########################################################################
         ################# Pre-training on concatenated embeddings #################
