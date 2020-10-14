@@ -1,0 +1,6 @@
+generator: fb-nlp.py
+containers:
+  docker:
+    - x86_64: docker:///pegasus/fb-nlp:latest
+  singularity:
+    - x86_64: library://papajim/default/fb-nlp

@@ -153,7 +153,7 @@ class WorkflowNLP():
         self.properties.write()
         self.logger.info("Creating properties")
 
-    def set_sites(self):
+    def set_sites(self, execution_site):
         # --- Site Catalog -------------------------------------------------------------
         shared_scratch_dir = str(WORK_DIR / RUN_ID)
         local_storage_dir = str(WORK_DIR / "outputs" / RUN_ID)
@@ -167,17 +167,17 @@ class WorkflowNLP():
                             .add_file_servers(FileServer("file://" + local_storage_dir, Operation.ALL))
                     )
 
-        condorpool = Site("condorpool") \
+        exec_site = Site(execution_site) \
                         .add_pegasus_profile(style="condor") \
                         .add_condor_profile(universe="vanilla") 
 
-        self.site_catalog.add_sites(local, condorpool)
+        self.site_catalog.add_sites(local, exec_site)
 
         # pegasus-planner will, by default, pick up this file in cwd
         self.site_catalog.write()
         self.logger.info("Creating sites catalog")
 
-    def set_transformations(self):
+    def set_transformations(self, execution_site):
         # --- Transformation Catalog (Executables and Containers) ----------------------
         # Create and add our container to the TransformationCatalog.
 
@@ -201,14 +201,14 @@ class WorkflowNLP():
 
         exe_wget = Transformation(
                         "wget",
-                        site="condorpool",
+                        site=execution_site,
                         pfn="/usr/bin/wget",
                         is_stageable=False,
                     )
 
         exe_gzip = Transformation(
                         "gzip",
-                        site="condorpool",
+                        site=execution_site,
                         pfn="/bin/gunzip",
                         is_stageable=False,
                         container=fb_nlp,
@@ -216,14 +216,14 @@ class WorkflowNLP():
 
         exe_concat = Transformation(
                         "concat",
-                        site="condorpool",
+                        site=execution_site,
                         pfn=str(Path(__file__).parent.resolve() / "bin/concatenate.sh"),
                         is_stageable=True,
                     )
 
         exe_concat_bpe = Transformation(
                         "concat-bpe",
-                        site="condorpool",
+                        site=execution_site,
                         pfn=str(Path(__file__).parent.resolve() / "bin/concat-bpe.sh"),
                         is_stageable=True,
                     )
@@ -231,7 +231,7 @@ class WorkflowNLP():
         # All executable that are installed inside of "container".
         exe_tokenize = Transformation(
                         "tokenize",
-                        site="condorpool",
+                        site=execution_site,
                         pfn="file:///tokenize.sh",
                         is_stageable=False,
                         container=fb_nlp
@@ -242,7 +242,7 @@ class WorkflowNLP():
 
         exe_tokenize_valid = Transformation(
                         "tokenize-validation",
-                        site="condorpool",
+                        site=execution_site,
                         pfn="file:///tokenize-validation.sh",
                         is_stageable=False,
                         container=fb_nlp
@@ -253,7 +253,7 @@ class WorkflowNLP():
 
         exe_bpe = Transformation(
                         "bpe",
-                        site="condorpool",
+                        site=execution_site,
                         pfn="file:///UnsupervisedMT/NMT/tools/fastBPE/fast",
                         is_stageable=False,
                         container=fb_nlp
@@ -262,7 +262,7 @@ class WorkflowNLP():
 
         exe_binarize = Transformation(
                         "binarize",
-                        site="condorpool",
+                        site=execution_site,
                         pfn="file:///UnsupervisedMT/NMT/preprocess.py",
                         is_stageable=False,
                         container=fb_nlp
@@ -271,7 +271,7 @@ class WorkflowNLP():
 
         exe_fasttext = Transformation(
                         "fasttext",
-                        site="condorpool",
+                        site=execution_site,
                         pfn="file:///UnsupervisedMT/NMT/tools/fastText/fasttext",
                         is_stageable=False,
                         container=fb_nlp
@@ -281,7 +281,7 @@ class WorkflowNLP():
 
         exe_training = Transformation(
                         "training",
-                        site="condorpool",
+                        site=execution_site,
                         pfn="file:///UnsupervisedMT/NMT/main.py",
                         is_stageable=False,
                         container=fb_nlp
@@ -718,13 +718,14 @@ if __name__ == '__main__':
     parser.add_argument("-g", "--gpus", type=int, default=1, help="Number of gpus")
     parser.add_argument("-s", "--singularity", action="store_true", help="Use singularity containers")
     parser.add_argument("-t", "--training", action="store_true", help="Activate training (require NVIDIA GPU)")
+    parser.add_argument("-e", "--execution_site", default="condorpool", help="Execution site name")
 
     args = parser.parse_args()
     
     wf = WorkflowNLP(RUN_ID, threads=args.cores, gpus=args.gpus, is_singularity=args.singularity, training=args.training, logger=LOGGER)
     wf.set_properties()
-    wf.set_sites()
-    wf.set_transformations()
+    wf.set_sites(args.execution_site)
+    wf.set_transformations(args.execution_site)
     wf.set_replicas()
     # To activate the training task set  training=True (REQUIRED GPU+CUDA)
     wf.set_jobs()
