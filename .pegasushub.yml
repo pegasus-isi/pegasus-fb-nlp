@@ -1,7 +1,6 @@
 pegasus:
   version: 
     min: 5.0.0
-    max: 5.0.0
 scripts:
   generator: fb-nlp.py
 external-data:
