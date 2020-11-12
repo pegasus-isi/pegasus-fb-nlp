@@ -1,6 +1,12 @@
-generator: fb-nlp.py
-containers:
-  docker:
-    - x86_64: docker:///pegasus/fb-nlp:latest
-  singularity:
-    - x86_64: library://papajim/default/fb-nlp
+pegasus:
+  version: 
+    min: 5.0.0
+    max: 5.0.0
+scripts:
+  generator: fb-nlp.py
+external-data:
+  containers:
+    docker:
+      x86_64: docker:///pegasus/fb-nlp:latest
+    singularity:
+      x86_64: library://papajim/default/fb-nlp
